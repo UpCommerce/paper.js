@@ -14,7 +14,7 @@
  * A function scope holding all the functionality needed to convert a
  * Paper.js DOM to a SVG DOM.
  */
-new function() {
+new function () {
     // TODO: Consider moving formatter into options object, and pass it along.
     var formatter;
 
@@ -54,8 +54,8 @@ new function() {
                 if (angle)
                     parts.push('rotate(' + formatter.number(angle) + ')');
                 if (!Numerical.isZero(scale.x - 1)
-                        || !Numerical.isZero(scale.y - 1))
-                    parts.push('scale(' + formatter.point(scale) +')');
+                    || !Numerical.isZero(scale.y - 1))
+                    parts.push('scale(' + formatter.point(scale) + ')');
                 if (skew.x)
                     parts.push('skewX(' + formatter.number(skew.x) + ')');
                 if (skew.y)
@@ -101,7 +101,7 @@ new function() {
         attrs.width = size.width;
         attrs.height = size.height;
         attrs.href = options.embedImages == false && image && image.src
-                || item.toDataURL();
+            || item.toDataURL();
         return SvgElement.create('image', attrs, formatter);
     }
 
@@ -233,7 +233,7 @@ new function() {
             }
             attrs.gradientUnits = 'userSpaceOnUse';
             gradientNode = SvgElement.create((radial ? 'radial' : 'linear')
-                    + 'Gradient', attrs, formatter);
+                + 'Gradient', attrs, formatter);
             var stops = gradient._stops;
             for (var i = 0, l = stops.length; i < l; i++) {
                 var stop = stops[i],
@@ -250,7 +250,7 @@ new function() {
                 if (alpha < 1)
                     attrs['stop-opacity'] = alpha;
                 gradientNode.appendChild(
-                        SvgElement.create('stop', attrs, formatter));
+                    SvgElement.create('stop', attrs, formatter));
             }
             setDefinition(color, gradientNode, 'color');
         }
@@ -258,10 +258,49 @@ new function() {
     }
 
     function exportText(item) {
-        var node = SvgElement.create('text', getTransform(item._matrix, true),
+        if (!item._textureFill) {
+            var node = SvgElement.create('text', getTransform(item._matrix, true),
                 formatter);
-        node.textContent = item._content;
-        return node;
+            node.textContent = item._content;
+            return node;
+        } else {
+            // Create a <g/> with the text inside without transform, and apply the transform to <g/>
+            // This is required for the text to be positioned correctly in the parent group.
+            var attrs = getTransform(item._matrix, false),
+                group = SvgElement.create('g', attrs, formatter);
+            var node = SvgElement.create('text', null,
+                formatter);
+            node.textContent = item._content;
+
+            group.appendChild(node);
+
+            const bounds = item._getBounds();
+
+            var filter = SvgElement.create('filter');
+
+            const imageRatio = item._textureFill.naturalWidth / item._textureFill.naturalHeight;
+
+            var feImage = SvgElement.create('feImage', {
+                href: item._textureFill.src,
+                x: bounds.x + 'px',
+                y: bounds.y + 'px',
+                width: bounds.width + 'px',
+                height: bounds.width / imageRatio + 'px'
+            }, formatter);
+
+            var feComposite = SvgElement.create('feComposite', {
+                in2: 'SourceGraphic',
+                operator: 'atop'
+            }, formatter);
+
+            filter.appendChild(feImage);
+            filter.appendChild(feComposite);
+
+            setDefinition(item, filter, 'filter');
+            group.setAttribute("filter", 'url(#' + filter.id + ') ');
+
+            return group;
+        }
     }
 
     var exporters = {
@@ -283,16 +322,16 @@ new function() {
         if (item._name != null)
             attrs.id = item._name;
 
-        Base.each(SvgStyles, function(entry) {
+        Base.each(SvgStyles, function (entry) {
             // Get a given style only if it differs from the value on the parent
             // (A layer or group which can have style values in SVG).
             var get = entry.get,
                 type = entry.type,
                 value = item[get]();
             if (entry.exportFilter
-                    ? entry.exportFilter(item, value)
-                    : options.reduceAttributes == false
-                        || !parent || !Base.equals(parent[get](), value)) {
+                ? entry.exportFilter(item, value)
+                : options.reduceAttributes == false
+                || !parent || !Base.equals(parent[get](), value)) {
                 if (type === 'color' && value != null) {
                     // Support for css-style rgba() values is not in SVG 1.1, so
                     // separate the alpha value of colors with alpha into the
@@ -305,13 +344,13 @@ new function() {
                     style.push(entry.attribute + ': ' + value);
                 } else {
                     attrs[entry.attribute] = value == null ? 'none'
-                            : type === 'color' ? value.gradient
-                                // true for noAlpha, see above
-                                ? exportGradient(value, item)
-                                : value.toCSS(true)
+                        : type === 'color' ? value.gradient
+                            // true for noAlpha, see above
+                            ? exportGradient(value, item)
+                            : value.toCSS(true)
                             : type === 'array' ? value.join(',')
-                            : type === 'lookup' ? entry.toSVG[value]
-                            : value;
+                                : type === 'lookup' ? entry.toSVG[value]
+                                    : value;
                 }
             }
         });
@@ -335,7 +374,7 @@ new function() {
         // Use #__id for items that don't have internal #_id properties (Color),
         // and give them ids from their own private id pool named 'svg'.
         return item && definitions.svgs[type + '-'
-                + (item._id || item.__id || (item.__id = UID.get('svg')))];
+            + (item._id || item.__id || (item.__id = UID.get('svg')))];
     }
 
     function setDefinition(item, node, type) {
@@ -369,16 +408,17 @@ new function() {
                         svg.appendChild(node);
                     }
                     defs = svg.insertBefore(SvgElement.create('defs'),
-                            svg.firstChild);
+                        svg.firstChild);
                 }
+
                 defs.appendChild(definitions.svgs[i]);
             }
             // Clear definitions at the end of export
             definitions = null;
         }
         return options.asString
-                ? new self.XMLSerializer().serializeToString(svg)
-                : svg;
+            ? new self.XMLSerializer().serializeToString(svg)
+            : svg;
     }
 
     function exportSVG(item, options, isRoot) {
@@ -405,14 +445,14 @@ new function() {
     }
 
     Item.inject({
-        exportSVG: function(options) {
+        exportSVG: function (options) {
             options = setOptions(options);
             return exportDefinitions(exportSVG(this, options, true), options);
         }
     });
 
     Project.inject({
-        exportSVG: function(options) {
+        exportSVG: function (options) {
             options = setOptions(options);
             var children = this._children,
                 view = this.getView(),
@@ -442,7 +482,7 @@ new function() {
             // that transformation applied to.
             if (matrix && !matrix.isIdentity()) {
                 parent = node.appendChild(SvgElement.create('g',
-                        getTransform(matrix), formatter));
+                    getTransform(matrix), formatter));
             }
             for (var i = 0, l = children.length; i < l; i++) {
                 parent.appendChild(exportSVG(children[i], options, true));

@@ -35,21 +35,22 @@ var TextItem = Item.extend(/** @lends TextItem# */{
     initialize: function TextItem(arg) {
         this._content = '';
         this._lines = [];
+        this._textureFill = null;
         // Support two forms of item initialization: Passing one object literal
         // describing all the different properties to be set, or a point where
         // it should be placed (arg).
         // See if a point is passed, and if so, pass it on to _initialize().
         // If not, it might be a properties object literal.
         var hasProps = arg && Base.isPlainObject(arg)
-                && arg.x === undefined && arg.y === undefined;
+            && arg.x === undefined && arg.y === undefined;
         this._initialize(hasProps && arg, !hasProps && Point.read(arguments));
     },
 
-    _equals: function(item) {
+    _equals: function (item) {
         return this._content === item._content;
     },
 
-    copyContent: function(source) {
+    copyContent: function (source) {
         this.setContent(source._content);
     },
 
@@ -84,17 +85,27 @@ var TextItem = Item.extend(/** @lends TextItem# */{
      *     text.content = 'Your position is: ' + event.point.toString();
      * }
      */
-    getContent: function() {
+    getContent: function () {
         return this._content;
     },
 
-    setContent: function(content) {
+    setContent: function (content) {
         this._content = '' + content;
         this._lines = this._content.split(/\r\n|\n|\r/mg);
         this._changed(/*#=*/Change.CONTENT);
     },
 
-    isEmpty: function() {
+    getTextureFill: function () {
+        return this._textureFill;
+    },
+
+    setTextureFill: function (texture) {
+        console.log('Set texture full', texture);
+        this._textureFill = texture;
+        this._changed(/*#=*/Change.STYLE);
+    },
+
+    isEmpty: function () {
         return !this._content;
     },
 

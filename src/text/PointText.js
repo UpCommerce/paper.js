@@ -64,19 +64,19 @@ var PointText = TextItem.extend(/** @lends PointText# */{
      * @bean
      * @type Point
      */
-    getPoint: function() {
+    getPoint: function () {
         // Se Item#getPosition for an explanation why we create new LinkedPoint
         // objects each time.
         var point = this._matrix.getTranslation();
         return new LinkedPoint(point.x, point.y, this, 'setPoint');
     },
 
-    setPoint: function(/* point */) {
+    setPoint: function (/* point */) {
         var point = Point.read(arguments);
         this.translate(point.subtract(this._matrix.getTranslation()));
     },
 
-    _draw: function(ctx, param, viewMatrix) {
+    _draw: function (ctx, param, viewMatrix) {
         if (!this._content)
             return;
         this._setStyles(ctx, param, viewMatrix);
@@ -88,21 +88,60 @@ var PointText = TextItem.extend(/** @lends PointText# */{
             shadowColor = ctx.shadowColor;
         ctx.font = style.getFontStyle();
         ctx.textAlign = style.getJustification();
+
         for (var i = 0, l = lines.length; i < l; i++) {
             // See Path._draw() for explanation about ctx.shadowColor
             ctx.shadowColor = shadowColor;
+
             var line = lines[i];
-            if (hasFill) {
-                ctx.fillText(line, 0, 0);
-                ctx.shadowColor = 'rgba(0,0,0,0)';
+
+            if (!this._textureFill) {
+                if (hasFill) {
+                    ctx.fillText(line, 0, 0);
+                    ctx.shadowColor = 'rgba(0,0,0,0)';
+                }
+
+                if (hasStroke) {
+                    ctx.strokeText(line, 0, 0);
+                }
+            } else {
+
+                var bounds = this._getBounds();
+                var newCtx = CanvasProvider.getContext(bounds.width, bounds.height * 2);
+                this._setStyles(newCtx, param, viewMatrix);
+
+                newCtx.translate(0, bounds.height);
+
+                newCtx.font = ctx.font;
+                newCtx.textAlign = ctx.textAlign;
+                newCtx.shadowColor = ctx.shadowColor;
+
+
+                if (hasFill) {
+                    newCtx.fillText(line, 0, 0);
+                    newCtx.shadowColor = 'rgba(0,0,0,0)';
+                }
+
+                if (hasStroke) {
+                    newCtx.strokeText(line, 0, 0);
+                }
+
+                if (this._textureFill) {
+                    newCtx.translate(bounds.x, bounds.y);
+                    newCtx.globalCompositeOperation = "source-atop";
+                    const imageRatio = this._textureFill.width / this._textureFill.height;
+                    newCtx.drawImage(this._textureFill, 0, 0, bounds.width, bounds.width / imageRatio);
+
+                    ctx.drawImage(newCtx.canvas, 0, -bounds.height);
+                    CanvasProvider.release(newCtx);
+                }
             }
-            if (hasStroke)
-                ctx.strokeText(line, 0, 0);
+
             ctx.translate(0, leading);
         }
     },
 
-    _getBounds: function(matrix, options) {
+    _getBounds: function (matrix, options) {
         var style = this._style,
             lines = this._lines,
             numLines = lines.length,
@@ -112,12 +151,12 @@ var PointText = TextItem.extend(/** @lends PointText# */{
             x = 0;
         // Adjust for different justifications.
         if (justification !== 'left')
-            x -= width / (justification === 'center' ? 2: 1);
+            x -= width / (justification === 'center' ? 2 : 1);
         // Until we don't have baseline measuring, assume 1 / 4 leading as a
         // rough guess:
         var rect = new Rectangle(x,
-                    numLines ? - 0.75 * leading : 0,
-                    width, numLines * leading);
+            numLines ? - 0.75 * leading : 0,
+            width, numLines * leading);
         return matrix ? matrix._transformBounds(rect, rect) : rect;
     }
 });
