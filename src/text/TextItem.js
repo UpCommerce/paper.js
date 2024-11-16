@@ -100,7 +100,6 @@ var TextItem = Item.extend(/** @lends TextItem# */{
     },
 
     setTextureFill: function (texture) {
-        console.log('Set texture full', texture);
         this._textureFill = texture;
         this._changed(/*#=*/Change.STYLE);
     },

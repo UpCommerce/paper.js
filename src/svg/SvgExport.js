@@ -268,20 +268,30 @@ new function () {
             // This is required for the text to be positioned correctly in the parent group.
             var attrs = getTransform(item._matrix, false),
                 group = SvgElement.create('g', attrs, formatter);
+
             var node = SvgElement.create('text', null,
                 formatter);
+
             node.textContent = item._content;
 
             group.appendChild(node);
 
             const bounds = item._getBounds();
+            const imageRatio = item._textureFill.naturalWidth / item._textureFill.naturalHeight;
+
+            // First add the textureFill image in def
+            var image = SvgElement.create('image');
+            image.setAttribute('href', item._textureFill.src);
+            image.setAttribute('width', bounds.width + 'px');
+            image.setAttribute('height', bounds.width / imageRatio + 'px');
+
+            setDefinition(item, image, 'image');
 
             var filter = SvgElement.create('filter');
 
-            const imageRatio = item._textureFill.naturalWidth / item._textureFill.naturalHeight;
 
             var feImage = SvgElement.create('feImage', {
-                href: item._textureFill.src,
+                href: '#' + image.id,
                 x: bounds.x + 'px',
                 y: bounds.y + 'px',
                 width: bounds.width + 'px',

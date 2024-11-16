@@ -9,7 +9,7 @@
  *
  * All rights reserved.
  *
- * Date: Wed Jul 17 15:02:46 2024 +0200
+ * Date: Sat Nov 16 14:52:03 2024 +0100
  *
  ***
  *
@@ -15022,20 +15022,28 @@ new function () {
 		} else {
 			var attrs = getTransform(item._matrix, false),
 				group = SvgElement.create('g', attrs, formatter);
+
 			var node = SvgElement.create('text', null,
 				formatter);
+
 			node.textContent = item._content;
 
 			group.appendChild(node);
 
 			const bounds = item._getBounds();
+			const imageRatio = item._textureFill.naturalWidth / item._textureFill.naturalHeight;
+
+			var image = SvgElement.create('image');
+			image.setAttribute('href', item._textureFill.src);
+			image.setAttribute('width', bounds.width + 'px');
+			image.setAttribute('height', bounds.width / imageRatio + 'px');
+
+			setDefinition(item, image, 'image');
 
 			var filter = SvgElement.create('filter');
 
-			const imageRatio = item._textureFill.naturalWidth / item._textureFill.naturalHeight;
-
 			var feImage = SvgElement.create('feImage', {
-				href: item._textureFill.src,
+				href: '#' + image.id,
 				x: bounds.x + 'px',
 				y: bounds.y + 'px',
 				width: bounds.width + 'px',
