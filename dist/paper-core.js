@@ -9,7 +9,7 @@
  *
  * All rights reserved.
  *
- * Date: Sat Nov 16 14:52:03 2024 +0100
+ * Date: Sat Nov 16 15:25:28 2024 +0100
  *
  ***
  *
@@ -11594,7 +11594,6 @@ var TextItem = Item.extend({
 	},
 
 	setTextureFill: function (texture) {
-		console.log('Set texture full', texture);
 		this._textureFill = texture;
 		this._changed(129);
 	},
@@ -12479,6 +12478,7 @@ var Style = Base.extend(new function() {
 	groupDefaults = Base.set({}, itemDefaults, {
 		fontFamily: 'sans-serif',
 		fontWeight: 'normal',
+		fontStretch: 'normal',
 		fontSize: 12,
 		leading: null,
 		justification: 'left'
@@ -12495,6 +12495,7 @@ var Style = Base.extend(new function() {
 		fontFamily: 9,
 		fontWeight: 9,
 		fontSize: 9,
+		fontStretch: 9,
 		font: 9,
 		leading: 9,
 		justification: 9
@@ -12682,7 +12683,9 @@ var Style = Base.extend(new function() {
 
 	getFontStyle: function() {
 		var fontSize = this.getFontSize();
+		var fontStretch = this.getFontStretch();
 		return this.getFontWeight()
+				+ ' ' + fontStretch 
 				+ ' ' + fontSize + (/[a-z]/i.test(fontSize + '') ? ' ' : 'px ')
 				+ this.getFontFamily();
 	},
@@ -14761,6 +14764,7 @@ var SvgStyles = Base.each({
 	fontFamily: ['font-family', 'string'],
 	fontWeight: ['font-weight', 'string'],
 	fontSize: ['font-size', 'number'],
+	fontStretch: ['font-stretch', 'string'],
 	justification: ['text-anchor', 'lookup', {
 		left: 'start',
 		center: 'middle',
