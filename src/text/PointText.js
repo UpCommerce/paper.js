@@ -77,69 +77,153 @@ var PointText = TextItem.extend(/** @lends PointText# */{
     },
 
     _draw: function (ctx, param, viewMatrix) {
-        if (!this._content)
-            return;
-        this._setStyles(ctx, param, viewMatrix);
-        var lines = this._lines,
-            style = this._style,
-            hasFill = style.hasFill(),
-            hasStroke = style.hasStroke(),
-            leading = style.getLeading(),
-            shadowColor = ctx.shadowColor;
-        ctx.font = style.getFontStyle();
-        ctx.textAlign = style.getJustification();
+		if (!this._content)
+			return;
+		this._setStyles(ctx, param, viewMatrix);
+		var lines = this._lines,
+			style = this._style,
+			hasFill = style.hasFill(),
+			hasStroke = style.hasStroke(),
+			leading = style.getLeading(),
+			shadowColor = ctx.shadowColor;
+		ctx.font = style.getFontStyle();
+		ctx.textAlign = style.getJustification();
 
-        for (var i = 0, l = lines.length; i < l; i++) {
-            // See Path._draw() for explanation about ctx.shadowColor
-            ctx.shadowColor = shadowColor;
+		for (var i = 0, l = lines.length; i < l; i++) {
+			ctx.shadowColor = shadowColor;
 
-            var line = lines[i];
+			var line = lines[i];
 
-            if (!this._textureFill) {
-                if (hasFill) {
-                    ctx.fillText(line, 0, 0);
-                    ctx.shadowColor = 'rgba(0,0,0,0)';
-                }
+			if (!this._textureFill) {
+				if (hasFill) {
+					ctx.fillText(line, 0, 0);
+					ctx.shadowColor = 'rgba(0,0,0,0)';
+				}
 
-                if (hasStroke) {
-                    ctx.strokeText(line, 0, 0);
-                }
-            } else {
+				if (hasStroke) {
+					ctx.strokeText(line, 0, 0);
+				}
+			} else {
 
-                var bounds = this._getBounds();
-                var newCtx = CanvasProvider.getContext(bounds.width, bounds.height * 2);
-                this._setStyles(newCtx, param, viewMatrix);
+				var bounds = this._getBounds();
+				var newCtx = CanvasProvider.getContext(bounds.width, bounds.height * 2);
 
-                newCtx.translate(0, bounds.height);
+				this._setStyles(newCtx, param, viewMatrix);
 
-                newCtx.font = ctx.font;
-                newCtx.textAlign = ctx.textAlign;
-                newCtx.shadowColor = ctx.shadowColor;
+				newCtx.translate(0, bounds.height);
 
+				newCtx.font = ctx.font;
+				
+				// newCtx.textAlign = ctx.textAlign;
 
-                if (hasFill) {
-                    newCtx.fillText(line, 0, 0);
-                    newCtx.shadowColor = 'rgba(0,0,0,0)';
-                }
+				newCtx.shadowColor = ctx.shadowColor;
 
-                if (hasStroke) {
-                    newCtx.strokeText(line, 0, 0);
-                }
+				if (hasFill) {
+					newCtx.fillText(line, 0, 0);
+					newCtx.shadowColor = 'rgba(0,0,0,0)';
+				}
 
-                if (this._textureFill) {
-                    newCtx.translate(bounds.x, bounds.y);
-                    newCtx.globalCompositeOperation = "source-atop";
-                    const imageRatio = this._textureFill.width / this._textureFill.height;
-                    newCtx.drawImage(this._textureFill, 0, 0, bounds.width, bounds.width / imageRatio);
+				if (hasStroke) {
+					newCtx.strokeText(line, 0, 0);
+				}
+			
+				if (this._textureFill) {
+					let dx = 0;
+					if(ctx.textAlign == "center"){
+						dx = -bounds.width/2;
+					}
+					newCtx.translate(bounds.x-dx, bounds.y);
+					newCtx.globalCompositeOperation = "source-atop";
+					const imageRatio = this._textureFill.width / this._textureFill.height;
+					
 
-                    ctx.drawImage(newCtx.canvas, 0, -bounds.height);
-                    CanvasProvider.release(newCtx);
-                }
-            }
+					let leftImage = 0;
+					let topImage = 0;
+					let widthImage = bounds.width;
+					let heightImage = bounds.width / imageRatio;
 
-            ctx.translate(0, leading);
-        }
-    },
+					if(bounds.height > bounds.width){
+						heightImage = bounds.height;
+						widthImage = bounds.height * imageRatio;
+					}
+
+					if(this._textureOptions && widthImage > 0 && heightImage > 0){
+						const hasTextWidth = this._textureOptions.hasOwnProperty("textWidth");
+						const hasTextHeight = this._textureOptions.hasOwnProperty("textHeight");
+
+						if(hasTextWidth){
+							widthImage = this._textureOptions.textWidth;
+							heightImage = widthImage / imageRatio;
+						}
+
+						if(hasTextWidth && hasTextHeight && this._textureOptions.textHeight > this._textureOptions.textWidth){
+							heightImage = this._textureOptions.textHeight;
+							widthImage = this._textureOptions.textHeight * imageRatio;
+						}
+
+						if(this._textureOptions.hasOwnProperty("offsetLeft")){
+							leftImage = -this._textureOptions.offsetLeft;
+						}
+						if(this._textureOptions.hasOwnProperty("offsetTop")){
+							topImage = -this._textureOptions.offsetTop;
+						}
+
+						if(this._textureOptions.syncRatio){
+							if(this._textureOptions.hasOwnProperty("scaling")){
+								widthImage *= this._textureOptions.scaling;
+								heightImage *= this._textureOptions.scaling;
+							}
+						}else{
+							if(this._textureOptions.hasOwnProperty("scalingX")){
+								widthImage *= this._textureOptions.scalingX;
+							}
+							if(this._textureOptions.hasOwnProperty("scalingY")){
+								heightImage *= this._textureOptions.scalingY;
+							}
+						}
+						
+
+						if(this._textureOptions.hasOwnProperty("leftPosition")){
+							leftImage += this._textureOptions.leftPosition;
+						}
+						if(this._textureOptions.hasOwnProperty("topPosition")){
+							topImage -= this._textureOptions.topPosition;
+						}
+					}
+
+					newCtx.translate(leftImage,topImage);
+
+					if(this._textureOptions && widthImage > 0 && heightImage > 0){
+
+						if(this._textureOptions.horizontalFlip){
+							newCtx.translate(widthImage, 0);
+							newCtx.scale(-1, 1);
+						}
+						if(this._textureOptions.verticalFlip){
+							newCtx.translate(0, heightImage);
+							newCtx.scale(1, -1);
+						}
+
+						if(this._textureOptions.hasOwnProperty("rotation")){
+							newCtx.translate(widthImage/2, heightImage/2);
+							const radiants = (this._textureOptions.rotation * Math.PI) / 180;
+							newCtx.rotate(radiants);
+							newCtx.translate(-widthImage/2, -heightImage/2);
+						}
+						
+					}
+
+					if(widthImage > 0 && heightImage > 0 && bounds.height > 0){
+						newCtx.drawImage(this._textureFill, 0, 0, widthImage, heightImage);
+						ctx.drawImage(newCtx.canvas, dx, -bounds.height);
+						CanvasProvider.release(newCtx);
+					}
+				}
+			}
+
+			ctx.translate(0, leading);
+		}
+	},
 
     _getBounds: function (matrix, options) {
         var style = this._style,
