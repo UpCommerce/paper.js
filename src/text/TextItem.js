@@ -36,6 +36,7 @@ var TextItem = Item.extend(/** @lends TextItem# */{
         this._content = '';
         this._lines = [];
         this._textureFill = null;
+        this._textureOptions = null;
         // Support two forms of item initialization: Passing one object literal
         // describing all the different properties to be set, or a point where
         // it should be placed (arg).
@@ -103,6 +104,15 @@ var TextItem = Item.extend(/** @lends TextItem# */{
         this._textureFill = texture;
         this._changed(/*#=*/Change.STYLE);
     },
+
+    getTextureOptions: function () {
+		return this._textureOptions;
+	},
+
+	setTextureOptions: function (textureOptions) {
+		this._textureOptions = textureOptions;
+		this._changed(/*#=*/Change.STYLE);
+	},
 
     isEmpty: function () {
         return !this._content;
