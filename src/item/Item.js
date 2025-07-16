@@ -55,6 +55,7 @@ var Item = Base.extend(Emitter, /** @lends Item# */{
     _pivot: null,
     _visible: true,
     _blendMode: 'normal',
+    _enhanceBlendMode: false, // Matteo
     _opacity: 1,
     _locked: false,
     _guide: false,
@@ -74,6 +75,7 @@ var Item = Base.extend(Emitter, /** @lends Item# */{
         pivot: null,
         visible: true,
         blendMode: 'normal',
+        enhanceBlendMode: false, // Matteo
         opacity: 1,
         locked: false,
         guide: false,
@@ -406,7 +408,7 @@ new function() { // Injection scope for various item event handlers
         // CompoundPaths.
         this.getStyle().set(style);
     }
-}, Base.each(['locked', 'visible', 'blendMode', 'opacity', 'guide'],
+}, Base.each(['locked', 'visible', 'blendMode', 'opacity', 'guide', 'enhanceBlendMode'], // Matteo - aggiunto enhanceBlendMode
     // Produce getter/setters for properties. We need setters because we want to
     // call _changed() if a property was modified.
     function(name) {
@@ -1721,7 +1723,7 @@ new function() { // Injection scope for various item event handlers
         // meaning the default value has been overwritten (default is on
         // prototype).
         var keys = ['_locked', '_visible', '_blendMode', '_opacity',
-                '_clipMask', '_guide'];
+                '_clipMask', '_guide', '_enhanceBlendMode']; // Matteo - aggiunto enhanceBlendMode
         for (var i = 0, l = keys.length; i < l; i++) {
             var key = keys[i];
             if (source.hasOwnProperty(key))
@@ -4431,6 +4433,9 @@ new function() { // Injection scope for hit-test functions shared with project
         // over their fill.
         // Exclude Raster items since they never draw a stroke and handle
         // opacity by themselves (they also don't call _setStyles)
+
+        var enhanceBlendMode = this._enhanceBlendMode; // Matteo
+        
         var blendMode = this._blendMode,
             opacity = Numerical.clamp(this._opacity, 0, 1),
             normalBlend = blendMode === 'normal',
@@ -4455,6 +4460,11 @@ new function() { // Injection scope for hit-test functions shared with project
                 matrices.pop();
                 return;
             }
+            // Matteo -- Risolve il problema del testo tagliato con blendmode != normal e/o opacity != 1
+			if (this._class && this._class !== 'Raster')
+				bounds = bounds.expand(bounds.width * 1.51, bounds.height * 1.51);
+			// --
+
             // Store previous offset and save the main context, so we can
             // draw onto it later.
             prevOffset = param.offset;
@@ -4513,6 +4523,11 @@ new function() { // Injection scope for hit-test functions shared with project
                 ctx.translate(-offset.x, -offset.y);
         }
         this._draw(ctx, param, viewMatrix, strokeMatrix);
+        // Matteo - Test enhanced blend mode
+		if (direct && blendMode != "normal" && enhanceBlendMode) {
+			this._draw(ctx, param, viewMatrix, strokeMatrix);
+		}
+
         ctx.restore();
         matrices.pop();
         if (param.clip && !param.dontFinish) {
@@ -4527,6 +4542,14 @@ new function() { // Injection scope for hit-test functions shared with project
                     // Calculate the pixel offset of the temporary canvas to the
                     // main canvas. We also need to factor in the pixel-ratio.
                     itemOffset.subtract(prevOffset).multiply(pixelRatio));
+
+            // Matteo - Test enhanced blend mode
+            ctx.restore();
+			if (blendMode != "normal" && enhanceBlendMode) {
+				BlendMode.process(blendMode, ctx, mainCtx, opacity,
+					itemOffset.subtract(prevOffset).multiply(pixelRatio));
+			}
+
             // Return the temporary context, so it can be reused
             CanvasProvider.release(ctx);
             // Restore previous offset.
