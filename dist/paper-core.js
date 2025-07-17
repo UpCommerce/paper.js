@@ -1,5 +1,5 @@
 /*!
- * Paper.js v0.12.18-develop - The Swiss Army Knife of Vector Graphics Scripting.
+ * Paper.js v0.12.18-generic-fix-alex-24 - The Swiss Army Knife of Vector Graphics Scripting.
  * http://paperjs.org/
  *
  * Copyright (c) 2011 - 2020, Jürg Lehni & Jonathan Puckey
@@ -9,7 +9,7 @@
  *
  * All rights reserved.
  *
- * Date: Sat Nov 16 15:25:28 2024 +0100
+ * Date: Wed Jul 16 17:33:57 2025 +0200
  *
  ***
  *
@@ -821,7 +821,7 @@ var PaperScope = Base.extend({
 		}
 	},
 
-	version: "0.12.18-develop",
+	version: "0.12.18-generic-fix-alex-24",
 
 	getView: function() {
 		var project = this.project;
@@ -3148,6 +3148,7 @@ var Item = Base.extend(Emitter, {
 	_pivot: null,
 	_visible: true,
 	_blendMode: 'normal',
+	_enhanceBlendMode: false,
 	_opacity: 1,
 	_locked: false,
 	_guide: false,
@@ -3162,6 +3163,7 @@ var Item = Base.extend(Emitter, {
 		pivot: null,
 		visible: true,
 		blendMode: 'normal',
+		enhanceBlendMode: false,
 		opacity: 1,
 		locked: false,
 		guide: false,
@@ -3315,7 +3317,7 @@ new function() {
 	setStyle: function(style) {
 		this.getStyle().set(style);
 	}
-}, Base.each(['locked', 'visible', 'blendMode', 'opacity', 'guide'],
+}, Base.each(['locked', 'visible', 'blendMode', 'opacity', 'guide', 'enhanceBlendMode'],
 	function(name) {
 		var part = Base.capitalize(name),
 			key = '_' + name,
@@ -3881,7 +3883,7 @@ new function() {
 	copyAttributes: function(source, excludeMatrix) {
 		this.setStyle(source._style);
 		var keys = ['_locked', '_visible', '_blendMode', '_opacity',
-				'_clipMask', '_guide'];
+				'_clipMask', '_guide', '_enhanceBlendMode'];
 		for (var i = 0, l = keys.length; i < l; i++) {
 			var key = keys[i];
 			if (source.hasOwnProperty(key))
@@ -4721,6 +4723,7 @@ new function() {
 			this._globalMatrix = globalMatrix;
 		}
 
+		var enhanceBlendMode = this._enhanceBlendMode;
 		var blendMode = this._blendMode,
 			opacity = Numerical.clamp(this._opacity, 0, 1),
 			normalBlend = blendMode === 'normal',
@@ -4738,6 +4741,9 @@ new function() {
 				matrices.pop();
 				return;
 			}
+			if (this._class && this._class !== 'Raster')
+				bounds = bounds.expand(bounds.width * 1.51, bounds.height * 1.51);
+
 			prevOffset = param.offset;
 			itemOffset = param.offset = bounds.getTopLeft().floor();
 			mainCtx = ctx;
@@ -4773,6 +4779,10 @@ new function() {
 				ctx.translate(-offset.x, -offset.y);
 		}
 		this._draw(ctx, param, viewMatrix, strokeMatrix);
+		if (direct && blendMode != "normal" && enhanceBlendMode) {
+			this._draw(ctx, param, viewMatrix, strokeMatrix);
+		}
+
 		ctx.restore();
 		matrices.pop();
 		if (param.clip && !param.dontFinish) {
@@ -4781,6 +4791,13 @@ new function() {
 		if (!direct) {
 			BlendMode.process(blendMode, ctx, mainCtx, opacity,
 					itemOffset.subtract(prevOffset).multiply(pixelRatio));
+
+			ctx.restore();
+			if (blendMode != "normal" && enhanceBlendMode) {
+				BlendMode.process(blendMode, ctx, mainCtx, opacity,
+					itemOffset.subtract(prevOffset).multiply(pixelRatio));
+			}
+
 			CanvasProvider.release(ctx);
 			param.offset = prevOffset;
 		}
@@ -11566,6 +11583,7 @@ var TextItem = Item.extend({
 		this._content = '';
 		this._lines = [];
 		this._textureFill = null;
+		this._textureOptions = null;
 		var hasProps = arg && Base.isPlainObject(arg)
 			&& arg.x === undefined && arg.y === undefined;
 		this._initialize(hasProps && arg, !hasProps && Point.read(arguments));
@@ -11595,6 +11613,15 @@ var TextItem = Item.extend({
 
 	setTextureFill: function (texture) {
 		this._textureFill = texture;
+		this._changed(129);
+	},
+
+	getTextureOptions: function () {
+		return this._textureOptions;
+	},
+
+	setTextureOptions: function (textureOptions) {
+		this._textureOptions = textureOptions;
 		this._changed(129);
 	},
 
@@ -11657,12 +11684,13 @@ var PointText = TextItem.extend({
 
 				var bounds = this._getBounds();
 				var newCtx = CanvasProvider.getContext(bounds.width, bounds.height * 2);
+
 				this._setStyles(newCtx, param, viewMatrix);
 
 				newCtx.translate(0, bounds.height);
 
 				newCtx.font = ctx.font;
-				newCtx.textAlign = ctx.textAlign;
+
 				newCtx.shadowColor = ctx.shadowColor;
 
 				if (hasFill) {
@@ -11673,15 +11701,94 @@ var PointText = TextItem.extend({
 				if (hasStroke) {
 					newCtx.strokeText(line, 0, 0);
 				}
-
 				if (this._textureFill) {
-					newCtx.translate(bounds.x, bounds.y);
+					let dx = 0;
+					if(ctx.textAlign == "center"){
+						dx = -bounds.width/2;
+					}
+					newCtx.translate(bounds.x-dx, bounds.y);
 					newCtx.globalCompositeOperation = "source-atop";
 					const imageRatio = this._textureFill.width / this._textureFill.height;
-					newCtx.drawImage(this._textureFill, 0, 0, bounds.width, bounds.width / imageRatio);
 
-					ctx.drawImage(newCtx.canvas, 0, -bounds.height);
-					CanvasProvider.release(newCtx);
+					let leftImage = 0;
+					let topImage = 0;
+					let widthImage = bounds.width;
+					let heightImage = bounds.width / imageRatio;
+
+					if(bounds.height > bounds.width){
+						heightImage = bounds.height;
+						widthImage = bounds.height * imageRatio;
+					}
+
+					if(this._textureOptions && widthImage > 0 && heightImage > 0){
+						const hasTextWidth = this._textureOptions.hasOwnProperty("textWidth");
+						const hasTextHeight = this._textureOptions.hasOwnProperty("textHeight");
+
+						if(hasTextWidth){
+							widthImage = this._textureOptions.textWidth;
+							heightImage = widthImage / imageRatio;
+						}
+
+						if(hasTextWidth && hasTextHeight && this._textureOptions.textHeight > this._textureOptions.textWidth){
+							heightImage = this._textureOptions.textHeight;
+							widthImage = this._textureOptions.textHeight * imageRatio;
+						}
+
+						if(this._textureOptions.hasOwnProperty("offsetLeft")){
+							leftImage = -this._textureOptions.offsetLeft;
+						}
+						if(this._textureOptions.hasOwnProperty("offsetTop")){
+							topImage = -this._textureOptions.offsetTop;
+						}
+
+						if(this._textureOptions.syncRatio){
+							if(this._textureOptions.hasOwnProperty("scaling")){
+								widthImage *= this._textureOptions.scaling;
+								heightImage *= this._textureOptions.scaling;
+							}
+						}else{
+							if(this._textureOptions.hasOwnProperty("scalingX")){
+								widthImage *= this._textureOptions.scalingX;
+							}
+							if(this._textureOptions.hasOwnProperty("scalingY")){
+								heightImage *= this._textureOptions.scalingY;
+							}
+						}
+
+						if(this._textureOptions.hasOwnProperty("leftPosition")){
+							leftImage += this._textureOptions.leftPosition;
+						}
+						if(this._textureOptions.hasOwnProperty("topPosition")){
+							topImage -= this._textureOptions.topPosition;
+						}
+					}
+
+					newCtx.translate(leftImage,topImage);
+
+					if(this._textureOptions && widthImage > 0 && heightImage > 0){
+
+						if(this._textureOptions.horizontalFlip){
+							newCtx.translate(widthImage, 0);
+							newCtx.scale(-1, 1);
+						}
+						if(this._textureOptions.verticalFlip){
+							newCtx.translate(0, heightImage);
+							newCtx.scale(1, -1);
+						}
+
+						if(this._textureOptions.hasOwnProperty("rotation")){
+							newCtx.translate(widthImage/2, heightImage/2);
+							const radiants = (this._textureOptions.rotation * Math.PI) / 180;
+							newCtx.rotate(radiants);
+							newCtx.translate(-widthImage/2, -heightImage/2);
+						}
+					}
+
+					if(widthImage > 0 && heightImage > 0 && bounds.height > 0){
+						newCtx.drawImage(this._textureFill, 0, 0, widthImage, heightImage);
+						ctx.drawImage(newCtx.canvas, dx, -bounds.height);
+						CanvasProvider.release(newCtx);
+					}
 				}
 			}
 
@@ -12478,7 +12585,6 @@ var Style = Base.extend(new function() {
 	groupDefaults = Base.set({}, itemDefaults, {
 		fontFamily: 'sans-serif',
 		fontWeight: 'normal',
-		fontStretch: 'normal',
 		fontSize: 12,
 		leading: null,
 		justification: 'left'
@@ -12495,7 +12601,6 @@ var Style = Base.extend(new function() {
 		fontFamily: 9,
 		fontWeight: 9,
 		fontSize: 9,
-		fontStretch: 9,
 		font: 9,
 		leading: 9,
 		justification: 9
@@ -12683,9 +12788,7 @@ var Style = Base.extend(new function() {
 
 	getFontStyle: function() {
 		var fontSize = this.getFontSize();
-		var fontStretch = this.getFontStretch();
 		return this.getFontWeight()
-				+ ' ' + fontStretch 
 				+ ' ' + fontSize + (/[a-z]/i.test(fontSize + '') ? ' ' : 'px ')
 				+ this.getFontFamily();
 	},
@@ -14764,7 +14867,6 @@ var SvgStyles = Base.each({
 	fontFamily: ['font-family', 'string'],
 	fontWeight: ['font-weight', 'string'],
 	fontSize: ['font-size', 'number'],
-	fontStretch: ['font-stretch', 'string'],
 	justification: ['text-anchor', 'lookup', {
 		left: 'start',
 		center: 'middle',
