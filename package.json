@@ -4,7 +4,6 @@
   "description": "The Swiss Army Knife of Vector Graphics Scripting",
   "license": "MIT",
   "homepage": "http://paperjs.org",
-  "private": true,
   "main": "dist/paper-full.js",
   "types": "dist/paper.d.ts",
   "scripts": {
