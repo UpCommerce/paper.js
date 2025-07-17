@@ -1,5 +1,5 @@
 /*!
- * Paper.js v0.12.18-generic-fix-alex-24 - The Swiss Army Knife of Vector Graphics Scripting.
+ * Paper.js v0.12.18-develop - The Swiss Army Knife of Vector Graphics Scripting.
  * http://paperjs.org/
  *
  * Copyright (c) 2011 - 2020, Jürg Lehni & Jonathan Puckey
@@ -9,7 +9,7 @@
  *
  * All rights reserved.
  *
- * Date: Wed Jul 16 17:33:57 2025 +0200
+ * Date: Thu Jul 17 17:49:39 2025 +0200
  *
  ***
  *
@@ -821,7 +821,7 @@ var PaperScope = Base.extend({
 		}
 	},
 
-	version: "0.12.18-generic-fix-alex-24",
+	version: "0.12.18-develop",
 
 	getView: function() {
 		var project = this.project;
