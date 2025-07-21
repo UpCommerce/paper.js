@@ -276,8 +276,8 @@ new function () {
 
             group.appendChild(node);
 
-            const bounds = item._getBounds();
-            const imageRatio = item._textureFill.naturalWidth / item._textureFill.naturalHeight;
+            var bounds = item._getBounds();
+            var imageRatio = item._textureFill.naturalWidth / item._textureFill.naturalHeight;
 
             // First add the textureFill image in def
             var image = SvgElement.create('image');

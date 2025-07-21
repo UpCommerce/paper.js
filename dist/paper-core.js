@@ -9,7 +9,7 @@
  *
  * All rights reserved.
  *
- * Date: Thu Jul 17 17:49:39 2025 +0200
+ * Date: Thu Jul 17 17:57:32 2025 +0200
  *
  ***
  *
@@ -11702,18 +11702,18 @@ var PointText = TextItem.extend({
 					newCtx.strokeText(line, 0, 0);
 				}
 				if (this._textureFill) {
-					let dx = 0;
+					var dx = 0;
 					if(ctx.textAlign == "center"){
 						dx = -bounds.width/2;
 					}
 					newCtx.translate(bounds.x-dx, bounds.y);
 					newCtx.globalCompositeOperation = "source-atop";
-					const imageRatio = this._textureFill.width / this._textureFill.height;
+					var imageRatio = this._textureFill.width / this._textureFill.height;
 
-					let leftImage = 0;
-					let topImage = 0;
-					let widthImage = bounds.width;
-					let heightImage = bounds.width / imageRatio;
+					var leftImage = 0;
+					var topImage = 0;
+					var widthImage = bounds.width;
+					var heightImage = bounds.width / imageRatio;
 
 					if(bounds.height > bounds.width){
 						heightImage = bounds.height;
@@ -11721,8 +11721,8 @@ var PointText = TextItem.extend({
 					}
 
 					if(this._textureOptions && widthImage > 0 && heightImage > 0){
-						const hasTextWidth = this._textureOptions.hasOwnProperty("textWidth");
-						const hasTextHeight = this._textureOptions.hasOwnProperty("textHeight");
+						var hasTextWidth = this._textureOptions.hasOwnProperty("textWidth");
+						var hasTextHeight = this._textureOptions.hasOwnProperty("textHeight");
 
 						if(hasTextWidth){
 							widthImage = this._textureOptions.textWidth;
@@ -11778,7 +11778,7 @@ var PointText = TextItem.extend({
 
 						if(this._textureOptions.hasOwnProperty("rotation")){
 							newCtx.translate(widthImage/2, heightImage/2);
-							const radiants = (this._textureOptions.rotation * Math.PI) / 180;
+							var radiants = (this._textureOptions.rotation * Math.PI) / 180;
 							newCtx.rotate(radiants);
 							newCtx.translate(-widthImage/2, -heightImage/2);
 						}
@@ -15133,8 +15133,8 @@ new function () {
 
 			group.appendChild(node);
 
-			const bounds = item._getBounds();
-			const imageRatio = item._textureFill.naturalWidth / item._textureFill.naturalHeight;
+			var bounds = item._getBounds();
+			var imageRatio = item._textureFill.naturalWidth / item._textureFill.naturalHeight;
 
 			var image = SvgElement.create('image');
 			image.setAttribute('href', item._textureFill.src);

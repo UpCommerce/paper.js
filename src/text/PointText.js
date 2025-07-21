@@ -128,19 +128,19 @@ var PointText = TextItem.extend(/** @lends PointText# */{
 				}
 			
 				if (this._textureFill) {
-					let dx = 0;
+					var dx = 0;
 					if(ctx.textAlign == "center"){
 						dx = -bounds.width/2;
 					}
 					newCtx.translate(bounds.x-dx, bounds.y);
 					newCtx.globalCompositeOperation = "source-atop";
-					const imageRatio = this._textureFill.width / this._textureFill.height;
+					var imageRatio = this._textureFill.width / this._textureFill.height;
 					
 
-					let leftImage = 0;
-					let topImage = 0;
-					let widthImage = bounds.width;
-					let heightImage = bounds.width / imageRatio;
+					var leftImage = 0;
+					var topImage = 0;
+					var widthImage = bounds.width;
+					var heightImage = bounds.width / imageRatio;
 
 					if(bounds.height > bounds.width){
 						heightImage = bounds.height;
@@ -148,8 +148,8 @@ var PointText = TextItem.extend(/** @lends PointText# */{
 					}
 
 					if(this._textureOptions && widthImage > 0 && heightImage > 0){
-						const hasTextWidth = this._textureOptions.hasOwnProperty("textWidth");
-						const hasTextHeight = this._textureOptions.hasOwnProperty("textHeight");
+						var hasTextWidth = this._textureOptions.hasOwnProperty("textWidth");
+						var hasTextHeight = this._textureOptions.hasOwnProperty("textHeight");
 
 						if(hasTextWidth){
 							widthImage = this._textureOptions.textWidth;
@@ -206,7 +206,7 @@ var PointText = TextItem.extend(/** @lends PointText# */{
 
 						if(this._textureOptions.hasOwnProperty("rotation")){
 							newCtx.translate(widthImage/2, heightImage/2);
-							const radiants = (this._textureOptions.rotation * Math.PI) / 180;
+							var radiants = (this._textureOptions.rotation * Math.PI) / 180;
 							newCtx.rotate(radiants);
 							newCtx.translate(-widthImage/2, -heightImage/2);
 						}
