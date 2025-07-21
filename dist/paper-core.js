@@ -9,7 +9,7 @@
  *
  * All rights reserved.
  *
- * Date: Thu Jul 17 17:57:32 2025 +0200
+ * Date: Mon Jul 21 11:26:15 2025 +0200
  *
  ***
  *
@@ -11684,7 +11684,7 @@ var PointText = TextItem.extend({
 
 				var bounds = this._getBounds();
 				var newCtx = CanvasProvider.getContext(bounds.width, bounds.height * 2);
-
+				console.log('applying texture to PointText', this._textureFill, this._textureOptions);
 				this._setStyles(newCtx, param, viewMatrix);
 
 				newCtx.translate(0, bounds.height);

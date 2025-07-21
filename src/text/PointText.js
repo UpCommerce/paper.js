@@ -107,7 +107,6 @@ var PointText = TextItem.extend(/** @lends PointText# */{
 
 				var bounds = this._getBounds();
 				var newCtx = CanvasProvider.getContext(bounds.width, bounds.height * 2);
-
 				this._setStyles(newCtx, param, viewMatrix);
 
 				newCtx.translate(0, bounds.height);

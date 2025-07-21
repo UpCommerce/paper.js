@@ -15,7 +15,12 @@ var gulp = require('gulp'),
     merge = require('merge-stream'),
     zip = require('gulp-zip');
 
-gulp.task('dist', ['build', 'minify']);
+gulp.task('dist', ['build', 'minify', 'copy:definitions']);
+
+gulp.task('copy:definitions', function () {
+    return gulp.src(['definitions/paper.d.ts', 'definitions/paper-core.d.ts'])
+        .pipe(gulp.dest('dist'));
+});
 
 gulp.task('zip', ['clean:zip', 'dist'], function() {
     return merge(
