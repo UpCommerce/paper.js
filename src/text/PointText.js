@@ -222,7 +222,7 @@ var PointText = TextItem.extend(/** @lends PointText# */{
 						ctx.scale(scaling, scaling);
 						ctx.translate(0, bounds.height);
 
-						var DEBUG = true;
+						var DEBUG = false;
 
 						if (DEBUG) {
 							document.body.append(newCtx.canvas);
