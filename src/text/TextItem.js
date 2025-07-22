@@ -27,7 +27,8 @@ var TextItem = Item.extend(/** @lends TextItem# */{
     _canApplyMatrix: false,
     _serializeFields: {
         content: null,
-        textureFill: null
+        textureFill: null,
+        textureOptions: null,
     },
     // TextItem doesn't make the distinction between the different bounds,
     // so use the same name for all of them

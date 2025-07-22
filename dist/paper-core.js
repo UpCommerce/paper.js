@@ -9,7 +9,7 @@
  *
  * All rights reserved.
  *
- * Date: Tue Jul 22 11:42:54 2025 +0200
+ * Date: Tue Jul 22 14:59:17 2025 +0200
  *
  ***
  *
@@ -11576,7 +11576,8 @@ var TextItem = Item.extend({
 	_canApplyMatrix: false,
 	_serializeFields: {
 		content: null,
-		textureFill: null
+		textureFill: null,
+		textureOptions: null,
 	},
 	_boundsOptions: { stroke: false, handle: false },
 
@@ -11834,7 +11835,7 @@ var PointText = TextItem.extend({
 						ctx.scale(scaling, scaling);
 						ctx.translate(0, bounds.height);
 
-						var DEBUG = true;
+						var DEBUG = false;
 
 						if (DEBUG) {
 							document.body.append(newCtx.canvas);
