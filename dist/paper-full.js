@@ -9,7 +9,7 @@
  *
  * All rights reserved.
  *
- * Date: Mon Jul 21 16:15:04 2025 +0200
+ * Date: Tue Jul 22 11:42:54 2025 +0200
  *
  ***
  *
@@ -11725,13 +11725,12 @@ var PointText = TextItem.extend({
 					ctx.strokeText(line, 0, 0);
 				}
 			} else {
-
 				var bounds = this._getBounds();
-				var newCtx = CanvasProvider.getContext(bounds.width, bounds.height * 2);
+				var scaling = this._matrix.scaling.x
+				var newCtx = CanvasProvider.getContext(bounds.width * scaling, bounds.height * scaling * 1.5);
 				this._setStyles(newCtx, param, viewMatrix);
-
+				newCtx.scale(scaling, scaling);
 				newCtx.translate(0, bounds.height);
-
 				newCtx.font = ctx.font;
 
 				newCtx.shadowColor = ctx.shadowColor;
@@ -11744,12 +11743,13 @@ var PointText = TextItem.extend({
 				if (hasStroke) {
 					newCtx.strokeText(line, 0, 0);
 				}
+
 				if (this._textureFill) {
 					var dx = 0;
-					if(ctx.textAlign == "center"){
-						dx = -bounds.width/2;
+					if (ctx.textAlign == "center") {
+						dx = -bounds.width / 2;
 					}
-					newCtx.translate(bounds.x-dx, bounds.y);
+					newCtx.translate(bounds.x - dx, bounds.y);
 					newCtx.globalCompositeOperation = "source-atop";
 					var imageRatio = this._textureFill.width / this._textureFill.height;
 
@@ -11758,79 +11758,95 @@ var PointText = TextItem.extend({
 					var widthImage = bounds.width;
 					var heightImage = bounds.width / imageRatio;
 
-					if(bounds.height > bounds.width){
+					if (bounds.height > bounds.width) {
 						heightImage = bounds.height;
 						widthImage = bounds.height * imageRatio;
 					}
 
-					if(this._textureOptions && widthImage > 0 && heightImage > 0){
+					if (this._textureOptions && widthImage > 0 && heightImage > 0) {
 						var hasTextWidth = this._textureOptions.hasOwnProperty("textWidth");
 						var hasTextHeight = this._textureOptions.hasOwnProperty("textHeight");
 
-						if(hasTextWidth){
+						if (hasTextWidth) {
 							widthImage = this._textureOptions.textWidth;
 							heightImage = widthImage / imageRatio;
 						}
 
-						if(hasTextWidth && hasTextHeight && this._textureOptions.textHeight > this._textureOptions.textWidth){
+						if (hasTextWidth && hasTextHeight && this._textureOptions.textHeight > this._textureOptions.textWidth) {
 							heightImage = this._textureOptions.textHeight;
 							widthImage = this._textureOptions.textHeight * imageRatio;
 						}
 
-						if(this._textureOptions.hasOwnProperty("offsetLeft")){
+						if (this._textureOptions.hasOwnProperty("offsetLeft")) {
 							leftImage = -this._textureOptions.offsetLeft;
 						}
-						if(this._textureOptions.hasOwnProperty("offsetTop")){
+						if (this._textureOptions.hasOwnProperty("offsetTop")) {
 							topImage = -this._textureOptions.offsetTop;
 						}
 
-						if(this._textureOptions.syncRatio){
-							if(this._textureOptions.hasOwnProperty("scaling")){
+						if (this._textureOptions.syncRatio) {
+							if (this._textureOptions.hasOwnProperty("scaling")) {
 								widthImage *= this._textureOptions.scaling;
 								heightImage *= this._textureOptions.scaling;
 							}
-						}else{
-							if(this._textureOptions.hasOwnProperty("scalingX")){
+						} else {
+							if (this._textureOptions.hasOwnProperty("scalingX")) {
 								widthImage *= this._textureOptions.scalingX;
 							}
-							if(this._textureOptions.hasOwnProperty("scalingY")){
+							if (this._textureOptions.hasOwnProperty("scalingY")) {
 								heightImage *= this._textureOptions.scalingY;
 							}
 						}
 
-						if(this._textureOptions.hasOwnProperty("leftPosition")){
+						if (this._textureOptions.hasOwnProperty("leftPosition")) {
 							leftImage += this._textureOptions.leftPosition;
 						}
-						if(this._textureOptions.hasOwnProperty("topPosition")){
+						if (this._textureOptions.hasOwnProperty("topPosition")) {
 							topImage -= this._textureOptions.topPosition;
 						}
 					}
 
-					newCtx.translate(leftImage,topImage);
+					newCtx.translate(leftImage, topImage);
 
-					if(this._textureOptions && widthImage > 0 && heightImage > 0){
+					if (this._textureOptions && widthImage > 0 && heightImage > 0) {
 
-						if(this._textureOptions.horizontalFlip){
+						if (this._textureOptions.horizontalFlip) {
 							newCtx.translate(widthImage, 0);
 							newCtx.scale(-1, 1);
 						}
-						if(this._textureOptions.verticalFlip){
+						if (this._textureOptions.verticalFlip) {
 							newCtx.translate(0, heightImage);
 							newCtx.scale(1, -1);
 						}
 
-						if(this._textureOptions.hasOwnProperty("rotation")){
-							newCtx.translate(widthImage/2, heightImage/2);
+						if (this._textureOptions.hasOwnProperty("rotation")) {
+							newCtx.translate(widthImage / 2, heightImage / 2);
 							var radiants = (this._textureOptions.rotation * Math.PI) / 180;
 							newCtx.rotate(radiants);
-							newCtx.translate(-widthImage/2, -heightImage/2);
+							newCtx.translate(-widthImage / 2, -heightImage / 2);
 						}
+
 					}
 
-					if(widthImage > 0 && heightImage > 0 && bounds.height > 0){
+					if (widthImage > 0 && heightImage > 0 && bounds.height > 0) {
 						newCtx.drawImage(this._textureFill, 0, 0, widthImage, heightImage);
-						ctx.drawImage(newCtx.canvas, dx, -bounds.height);
-						CanvasProvider.release(newCtx);
+
+						ctx.translate(0, -bounds.height);
+						ctx.scale(1 / scaling, 1 / scaling);
+						ctx.drawImage(newCtx.canvas, dx, 0);
+						ctx.scale(scaling, scaling);
+						ctx.translate(0, bounds.height);
+
+						var DEBUG = true;
+
+						if (DEBUG) {
+							document.body.append(newCtx.canvas);
+							newCtx.canvas.style.position = 'fixed';
+							newCtx.canvas.style.left = '0px';
+							newCtx.canvas.style.top = '0px';
+							newCtx.canvas.style.zIndex = '1000';
+							CanvasProvider.release(newCtx);
+						}
 					}
 				}
 			}
