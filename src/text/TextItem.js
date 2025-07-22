@@ -26,7 +26,8 @@ var TextItem = Item.extend(/** @lends TextItem# */{
     _applyMatrix: false,
     _canApplyMatrix: false,
     _serializeFields: {
-        content: null
+        content: null,
+        textureFill: null
     },
     // TextItem doesn't make the distinction between the different bounds,
     // so use the same name for all of them
@@ -36,6 +37,7 @@ var TextItem = Item.extend(/** @lends TextItem# */{
         this._content = '';
         this._lines = [];
         this._textureFill = null;
+        this._loaded = false;
         this._textureOptions = null;
         // Support two forms of item initialization: Passing one object literal
         // describing all the different properties to be set, or a point where
@@ -96,23 +98,65 @@ var TextItem = Item.extend(/** @lends TextItem# */{
         this._changed(/*#=*/Change.CONTENT);
     },
 
-    getTextureFill: function () {
-        return this._textureFill;
+    getLoaded: function () {
+        return this._loaded;
     },
 
-    setTextureFill: function (texture) {
-        this._textureFill = texture;
+    setLoaded: function (loaded) {
+        this._loaded = loaded;
+    },
+
+    getTextureFill: function () {
+        return this._textureFill ? this._textureFill.src : null;
+    },
+
+    setTextureFill: function (url) {
+        var that = this;
+
+        if (this._textureFill && url === this._textureFill.src) {
+            // If the texture is already set, do nothing.
+            return;
+        }
+
+        function emit(event) {
+            var view = that.getView(),
+                type = event && event.type || 'load';
+            if (view && that.responds(type)) {
+                paper = view._scope;
+                console.log('TextItem loaded');
+                that.emit(type, new Event(event));
+            }
+        }
+
+
+        var image = new self.Image();
+        image.crossOrigin = 'anonymous';
+        image.src = url;
+
+        that._loaded = (image && image.src && image.complete);
+
+        // Trigger the load event on the image once it's loaded
+        DomEvent.add(image, {
+            load: function (event) {
+                that._loaded = true;
+                that._textureFill = image;
+                that._changed(/*#=*/Change.STYLE);
+                emit(event);
+            },
+            error: emit
+        });
+
         this._changed(/*#=*/Change.STYLE);
     },
 
     getTextureOptions: function () {
-		return this._textureOptions;
-	},
+        return this._textureOptions;
+    },
 
-	setTextureOptions: function (textureOptions) {
-		this._textureOptions = textureOptions;
-		this._changed(/*#=*/Change.STYLE);
-	},
+    setTextureOptions: function (textureOptions) {
+        this._textureOptions = textureOptions;
+        this._changed(/*#=*/Change.STYLE);
+    },
 
     isEmpty: function () {
         return !this._content;

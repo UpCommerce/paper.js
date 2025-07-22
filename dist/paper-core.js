@@ -9,7 +9,7 @@
  *
  * All rights reserved.
  *
- * Date: Mon Jul 21 11:26:15 2025 +0200
+ * Date: Mon Jul 21 16:15:04 2025 +0200
  *
  ***
  *
@@ -11575,7 +11575,8 @@ var TextItem = Item.extend({
 	_applyMatrix: false,
 	_canApplyMatrix: false,
 	_serializeFields: {
-		content: null
+		content: null,
+		textureFill: null
 	},
 	_boundsOptions: { stroke: false, handle: false },
 
@@ -11583,6 +11584,7 @@ var TextItem = Item.extend({
 		this._content = '';
 		this._lines = [];
 		this._textureFill = null;
+		this._loaded = false;
 		this._textureOptions = null;
 		var hasProps = arg && Base.isPlainObject(arg)
 			&& arg.x === undefined && arg.y === undefined;
@@ -11607,12 +11609,51 @@ var TextItem = Item.extend({
 		this._changed(521);
 	},
 
-	getTextureFill: function () {
-		return this._textureFill;
+	getLoaded: function () {
+		return this._loaded;
 	},
 
-	setTextureFill: function (texture) {
-		this._textureFill = texture;
+	setLoaded: function (loaded) {
+		this._loaded = loaded;
+	},
+
+	getTextureFill: function () {
+		return this._textureFill ? this._textureFill.src : null;
+	},
+
+	setTextureFill: function (url) {
+		var that = this;
+
+		if (this._textureFill && url === this._textureFill.src) {
+			return;
+		}
+
+		function emit(event) {
+			var view = that.getView(),
+				type = event && event.type || 'load';
+			if (view && that.responds(type)) {
+				paper = view._scope;
+				console.log('TextItem loaded');
+				that.emit(type, new Event(event));
+			}
+		}
+
+		var image = new self.Image();
+		image.crossOrigin = 'anonymous';
+		image.src = url;
+
+		that._loaded = (image && image.src && image.complete);
+
+		DomEvent.add(image, {
+			load: function (event) {
+				that._loaded = true;
+				that._textureFill = image;
+				that._changed(129);
+				emit(event);
+			},
+			error: emit
+		});
+
 		this._changed(129);
 	},
 
@@ -11684,7 +11725,6 @@ var PointText = TextItem.extend({
 
 				var bounds = this._getBounds();
 				var newCtx = CanvasProvider.getContext(bounds.width, bounds.height * 2);
-				console.log('applying texture to PointText', this._textureFill, this._textureOptions);
 				this._setStyles(newCtx, param, viewMatrix);
 
 				newCtx.translate(0, bounds.height);
