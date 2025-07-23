@@ -9,7 +9,7 @@
  *
  * All rights reserved.
  *
- * Date: Tue Jul 22 15:48:36 2025 +0200
+ * Date: Wed Jul 23 13:54:25 2025 +0200
  *
  ***
  *
@@ -11724,8 +11724,10 @@ var PointText = TextItem.extend({
 				}
 			} else {
 				var bounds = this._getBounds();
+				var metrics = ctx.measureText(line);
+				const textWidth = metrics.actualBoundingBoxRight - metrics.actualBoundingBoxLeft;
 				var scaling = this._matrix.scaling.x
-				var newCtx = CanvasProvider.getContext(bounds.width * scaling, bounds.height * scaling * 1.5);
+				var newCtx = CanvasProvider.getContext(textWidth * scaling, bounds.height * scaling * 1.5);
 				this._setStyles(newCtx, param, viewMatrix);
 				newCtx.shadowColor = 'rgba(0,0,0,0)';
 				newCtx.scale(scaling, scaling);
@@ -11739,7 +11741,7 @@ var PointText = TextItem.extend({
 				if (this._textureFill) {
 					var dx = 0;
 					if (ctx.textAlign == "center") {
-						dx = -bounds.width / 2;
+						dx = -textWidth / 2;
 					}
 					newCtx.translate(bounds.x - dx, bounds.y);
 					newCtx.globalCompositeOperation = "source-atop";
@@ -11747,8 +11749,8 @@ var PointText = TextItem.extend({
 
 					var leftImage = 0;
 					var topImage = 0;
-					var widthImage = bounds.width;
-					var heightImage = bounds.width / imageRatio;
+					var widthImage = textWidth;
+					var heightImage = textWidth / imageRatio;
 
 					if (bounds.height > bounds.width) {
 						heightImage = bounds.height;

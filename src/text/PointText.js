@@ -105,8 +105,10 @@ var PointText = TextItem.extend(/** @lends PointText# */{
 				}
 			} else {
 				var bounds = this._getBounds();
+				var metrics = ctx.measureText(line);
+				const textWidth = metrics.actualBoundingBoxRight - metrics.actualBoundingBoxLeft;
 				var scaling = this._matrix.scaling.x
-				var newCtx = CanvasProvider.getContext(bounds.width * scaling, bounds.height * scaling * 1.5);
+				var newCtx = CanvasProvider.getContext(textWidth * scaling, bounds.height * scaling * 1.5);
 				this._setStyles(newCtx, param, viewMatrix);
 				newCtx.shadowColor = 'rgba(0,0,0,0)';
 				newCtx.scale(scaling, scaling);
@@ -123,7 +125,7 @@ var PointText = TextItem.extend(/** @lends PointText# */{
 				if (this._textureFill) {
 					var dx = 0;
 					if (ctx.textAlign == "center") {
-						dx = -bounds.width / 2;
+						dx = -textWidth / 2;
 					}
 					newCtx.translate(bounds.x - dx, bounds.y);
 					newCtx.globalCompositeOperation = "source-atop";
@@ -132,8 +134,8 @@ var PointText = TextItem.extend(/** @lends PointText# */{
 
 					var leftImage = 0;
 					var topImage = 0;
-					var widthImage = bounds.width;
-					var heightImage = bounds.width / imageRatio;
+					var widthImage = textWidth;
+					var heightImage = textWidth / imageRatio;
 
 					if (bounds.height > bounds.width) {
 						heightImage = bounds.height;
