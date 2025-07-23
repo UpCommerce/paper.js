@@ -9,7 +9,7 @@
  *
  * All rights reserved.
  *
- * Date: Wed Jul 23 13:54:25 2025 +0200
+ * Date: Wed Jul 23 14:05:21 2025 +0200
  *
  ***
  *
@@ -11729,7 +11729,7 @@ var PointText = TextItem.extend({
 				var bounds = this._getBounds();
 				var metrics = ctx.measureText(line);
 				const textWidth = metrics.actualBoundingBoxRight - metrics.actualBoundingBoxLeft;
-				var scaling = this._matrix.scaling.x
+				var scaling = 1000 / textWidth;
 				var newCtx = CanvasProvider.getContext(textWidth * scaling, bounds.height * scaling * 1.5);
 				this._setStyles(newCtx, param, viewMatrix);
 				newCtx.shadowColor = 'rgba(0,0,0,0)';
@@ -11765,13 +11765,13 @@ var PointText = TextItem.extend({
 						var hasTextHeight = this._textureOptions.hasOwnProperty("textHeight");
 
 						if (hasTextWidth) {
-							widthImage = this._textureOptions.textWidth;
-							heightImage = widthImage / imageRatio;
+							widthImage = Math.round(this._textureOptions.textWidth);
+							heightImage = Math.round(widthImage / imageRatio);
 						}
 
 						if (hasTextWidth && hasTextHeight && this._textureOptions.textHeight > this._textureOptions.textWidth) {
-							heightImage = this._textureOptions.textHeight;
-							widthImage = this._textureOptions.textHeight * imageRatio;
+							heightImage = Math.round(this._textureOptions.textHeight);
+							widthImage = Math.round(this._textureOptions.textHeight * imageRatio);
 						}
 
 						if (this._textureOptions.hasOwnProperty("offsetLeft")) {
