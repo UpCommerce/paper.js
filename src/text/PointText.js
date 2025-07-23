@@ -106,8 +106,8 @@ var PointText = TextItem.extend(/** @lends PointText# */{
 			} else {
 				var bounds = this._getBounds();
 				var metrics = ctx.measureText(line);
-				const textWidth = metrics.actualBoundingBoxRight - metrics.actualBoundingBoxLeft;
-				var scaling = 1000 / textWidth; // GEneric good quality for the rendering
+				const textWidth = metrics.actualBoundingBoxRight + metrics.actualBoundingBoxLeft;
+				var scaling = 500 / textWidth; // GEneric good quality for the rendering
 				var newCtx = CanvasProvider.getContext(textWidth * scaling, bounds.height * scaling * 1.5);
 				this._setStyles(newCtx, param, viewMatrix);
 				newCtx.shadowColor = 'rgba(0,0,0,0)';
@@ -123,11 +123,7 @@ var PointText = TextItem.extend(/** @lends PointText# */{
 				}
 
 				if (this._textureFill) {
-					var dx = 0;
-					if (ctx.textAlign == "center") {
-						dx = -textWidth / 2;
-					}
-					newCtx.translate(bounds.x - dx, bounds.y);
+					newCtx.translate(bounds.x, bounds.y);
 					newCtx.globalCompositeOperation = "source-atop";
 					var imageRatio = this._textureFill.width / this._textureFill.height;
 
@@ -212,10 +208,10 @@ var PointText = TextItem.extend(/** @lends PointText# */{
 						newCtx.drawImage(this._textureFill, 0, 0, widthImage, heightImage);
 
 						// newCtx is bigger then the main, so to avoid a double scaling
-						ctx.translate(0, -bounds.height);
+						ctx.translate(-metrics.actualBoundingBoxLeft, -bounds.height);
 						// we need to scale it down the main ctx for a moment.
 						ctx.scale(1 / scaling, 1 / scaling);
-						ctx.drawImage(newCtx.canvas, dx, 0);
+						ctx.drawImage(newCtx.canvas, 0, 0);
 						ctx.scale(scaling, scaling);
 						ctx.translate(0, bounds.height);
 
