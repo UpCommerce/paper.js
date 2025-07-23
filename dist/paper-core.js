@@ -9,7 +9,7 @@
  *
  * All rights reserved.
  *
- * Date: Tue Jul 22 14:59:17 2025 +0200
+ * Date: Tue Jul 22 15:48:36 2025 +0200
  *
  ***
  *
@@ -11727,19 +11727,13 @@ var PointText = TextItem.extend({
 				var scaling = this._matrix.scaling.x
 				var newCtx = CanvasProvider.getContext(bounds.width * scaling, bounds.height * scaling * 1.5);
 				this._setStyles(newCtx, param, viewMatrix);
+				newCtx.shadowColor = 'rgba(0,0,0,0)';
 				newCtx.scale(scaling, scaling);
 				newCtx.translate(0, bounds.height);
 				newCtx.font = ctx.font;
 
-				newCtx.shadowColor = ctx.shadowColor;
-
 				if (hasFill) {
 					newCtx.fillText(line, 0, 0);
-					newCtx.shadowColor = 'rgba(0,0,0,0)';
-				}
-
-				if (hasStroke) {
-					newCtx.strokeText(line, 0, 0);
 				}
 
 				if (this._textureFill) {
@@ -11834,6 +11828,10 @@ var PointText = TextItem.extend({
 						ctx.drawImage(newCtx.canvas, dx, 0);
 						ctx.scale(scaling, scaling);
 						ctx.translate(0, bounds.height);
+
+						if (hasStroke) {
+							newCtx.strokeText(line, 0, 0);
+						}
 
 						var DEBUG = false;
 
