@@ -10,6 +10,42 @@
  * All rights reserved.
  */
 
+// ImageCache for texture fills - maintains up to 10 cached images
+var ImageCache = {
+    _cache: new Map(),
+    _order: [],
+    _maxSize: 10,
+
+    get: function (url) {
+        var cachedEntry = this._cache.get(url);
+        if (cachedEntry) {
+            // Move to end to mark as recently used
+            var index = this._order.indexOf(url);
+            if (index > -1) {
+                this._order.splice(index, 1);
+            }
+            this._order.push(url);
+            return cachedEntry.image;
+        }
+        return null;
+    },
+
+    set: function (url, image) {
+        // Remove oldest entries if cache is full
+        while (this._order.length >= this._maxSize) {
+            var oldest = this._order.shift();
+            this._cache.delete(oldest);
+        }
+
+        this._cache.set(url, { image: image, timestamp: Date.now() });
+        this._order.push(url);
+    },
+
+    has: function (url) {
+        return this._cache.has(url);
+    }
+};
+
 /**
  * @name TextItem
  *
@@ -129,6 +165,16 @@ var TextItem = Item.extend(/** @lends TextItem# */{
             }
         }
 
+        // Check if image is already cached
+        var cachedImage = ImageCache.get(url);
+        if (cachedImage) {
+            that._loaded = true;
+            that._textureFill = cachedImage;
+            that._changed(/*#=*/Change.STYLE);
+            // Emit load event for cached image
+            emit({ type: 'load' });
+            return;
+        }
 
         var image = new self.Image();
         image.crossOrigin = 'anonymous';
@@ -141,6 +187,8 @@ var TextItem = Item.extend(/** @lends TextItem# */{
             load: function (event) {
                 that._loaded = true;
                 that._textureFill = image;
+                // Cache the loaded image
+                ImageCache.set(url, image);
                 that._changed(/*#=*/Change.STYLE);
                 emit(event);
             },

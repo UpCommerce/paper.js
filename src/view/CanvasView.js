@@ -38,8 +38,8 @@ var CanvasView = View.extend(/** @lends CanvasView# */{
             var size = Size.read(arguments, 1);
             if (size.isZero())
                 throw new Error(
-                        'Cannot create CanvasView with the provided argument: '
-                        + Base.slice(arguments, 1));
+                    'Cannot create CanvasView with the provided argument: '
+                    + Base.slice(arguments, 1));
             canvas = CanvasProvider.getCanvas(size);
         }
         var ctx = this._context = canvas.getContext('2d');
@@ -52,7 +52,7 @@ var CanvasView = View.extend(/** @lends CanvasView# */{
             // https://www.html5rocks.com/en/tutorials/canvas/hidpi/
             var deviceRatio = window.devicePixelRatio || 1,
                 backingStoreRatio = DomElement.getPrefixed(ctx,
-                        'backingStorePixelRatio') || 1;
+                    'backingStorePixelRatio') || 1;
             this._pixelRatio = deviceRatio / backingStoreRatio;
         }
         View.call(this, project, canvas);
@@ -88,7 +88,7 @@ var CanvasView = View.extend(/** @lends CanvasView# */{
         }
     },
 
-    getContext: function() {
+    getContext: function () {
         return this._context;
     },
 
@@ -113,18 +113,52 @@ var CanvasView = View.extend(/** @lends CanvasView# */{
         return pixels;
     },
 
-    getTextWidth: function(font, lines) {
+    getTextWidth: function (font, lines) {
         var ctx = this._context,
             prevFont = ctx.font,
             width = 0;
         ctx.font = font;
         // Measure the real width of the text. Unfortunately, there is no sane
         // way to measure text height with canvas.
-        for (var i = 0, l = lines.length; i < l; i++)
-            width = Math.max(width, ctx.measureText(lines[i]).width);
+        for (var i = 0, l = lines.length; i < l; i++) {
+            var measure = ctx.measureText(lines[i]);
+            width = Math.max(width, measure.actualBoundingBoxRight + measure.actualBoundingBoxLeft);
+        }
         ctx.font = prevFont;
         return width;
     },
+
+    getTextHeight: function (font, lines) {
+        var ctx = this._context,
+            prevFont = ctx.font;
+        ctx.save();
+        // Reset ctx matrix
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.font = font;
+        var height = 0;
+        for (var i = 0, l = lines.length; i < l; i++) {
+            var measure = ctx.measureText(lines[i]);
+            height += measure.actualBoundingBoxAscent + measure.actualBoundingBoxDescent;
+        }
+        ctx.font = prevFont;
+        ctx.restore();
+        return height;
+    },
+
+    getBaseLine: function (font, lines) {
+        var ctx = this._context,
+            prevFont = ctx.font;
+        ctx.save();
+        // Reset ctx matrix
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.font = font;
+        var measure = ctx.measureText(lines.length ? lines[0] : 'M');
+        height = measure.hangingBaseline;
+        ctx.font = prevFont;
+        ctx.restore();
+        return height;
+    },
+
 
     /**
      * Updates the view if there are changes. Note that when using built-in
@@ -133,7 +167,7 @@ var CanvasView = View.extend(/** @lends CanvasView# */{
      *
      * @return {Boolean} {@true if the view was updated}
      */
-    update: function() {
+    update: function () {
         if (!this._needsUpdate)
             return false;
         var project = this._project,

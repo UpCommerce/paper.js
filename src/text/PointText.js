@@ -105,18 +105,22 @@ var PointText = TextItem.extend(/** @lends PointText# */{
 				}
 			} else {
 				var bounds = this._getBounds();
-				var metrics = ctx.measureText(line);
-				const textWidth = metrics.actualBoundingBoxRight + metrics.actualBoundingBoxLeft;
-				var scaling = 500 / textWidth; // GEneric good quality for the rendering
-				var newCtx = CanvasProvider.getContext(textWidth * scaling, bounds.height * scaling * 1.5);
+				const textWidth = bounds.width;
+				var scaling = Math.max(5, textWidth / 50); // GEneric good quality for the rendering
+				var canvasWidth = Math.round(textWidth * scaling);
+				var canvasHeight = Math.round(bounds.height * scaling * 1.5);
+
+				if (canvasWidth <= 0 || canvasHeight <= 0) {
+					// If the text is too small, we don't render it.
+					continue;
+				}
+
+				var newCtx = CanvasProvider.getContext(canvasWidth, canvasHeight);
 				this._setStyles(newCtx, param, viewMatrix);
-				newCtx.shadowColor = 'rgba(0,0,0,0)';
+				newCtx.shadowColor = null;
 				newCtx.scale(scaling, scaling);
 				newCtx.translate(0, bounds.height);
 				newCtx.font = ctx.font;
-
-				// newCtx.textAlign = ctx.textAlign;
-
 
 				if (hasFill) {
 					newCtx.fillText(line, 0, 0);
@@ -208,6 +212,7 @@ var PointText = TextItem.extend(/** @lends PointText# */{
 						newCtx.drawImage(this._textureFill, 0, 0, widthImage, heightImage);
 
 						// newCtx is bigger then the main, so to avoid a double scaling
+						var metrics = ctx.measureText(line);
 						ctx.translate(-metrics.actualBoundingBoxLeft, -bounds.height);
 						// we need to scale it down the main ctx for a moment.
 						ctx.scale(1 / scaling, 1 / scaling);
@@ -244,6 +249,8 @@ var PointText = TextItem.extend(/** @lends PointText# */{
 			justification = style.getJustification(),
 			leading = style.getLeading(),
 			width = this.getView().getTextWidth(style.getFontStyle(), lines),
+		//baseLine = this.getView().getBaseLine(style.getFontStyle(), lines),
+		//height = this.getView().getTextHeight(style.getFontStyle(), lines),
 			x = 0;
 		// Adjust for different justifications.
 		if (justification !== 'left')
@@ -251,7 +258,7 @@ var PointText = TextItem.extend(/** @lends PointText# */{
 		// Until we don't have baseline measuring, assume 1 / 4 leading as a
 		// rough guess:
 		var rect = new Rectangle(x,
-			numLines ? - 0.75 * leading : 0,
+			numLines ? -0.75 * leading : 0,
 			width, numLines * leading);
 		return matrix ? matrix._transformBounds(rect, rect) : rect;
 	}

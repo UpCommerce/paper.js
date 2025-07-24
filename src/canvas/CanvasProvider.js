@@ -14,8 +14,9 @@
 // width / height, so we don't need to resize it?
 var CanvasProvider = Base.exports.CanvasProvider = {
     canvases: [],
+    sizeMap: new Map(),
 
-    getCanvas: function(width, height, options) {
+    getCanvas: function (width, height, options) {
         if (!window)
             return null;
         var canvas,
@@ -24,6 +25,9 @@ var CanvasProvider = Base.exports.CanvasProvider = {
             height = width.height;
             width = width.width;
         }
+
+        // Check if we have a cached canvas of the right size
+        var sizeKey = width + 'x' + height;
         if (this.canvases.length) {
             canvas = this.canvases.pop();
         } else {
@@ -33,7 +37,7 @@ var CanvasProvider = Base.exports.CanvasProvider = {
         var ctx = canvas.getContext('2d', options || {});
         if (!ctx) {
             throw new Error('Canvas ' + canvas +
-                    ' is unable to provide a 2D context.');
+                ' is unable to provide a 2D context.');
         }
         // If they are not the same size, we don't need to clear them
         // using clearRect and visa versa.
@@ -50,18 +54,19 @@ var CanvasProvider = Base.exports.CanvasProvider = {
         return canvas;
     },
 
-    getContext: function(width, height, options) {
+    getContext: function (width, height, options) {
         var canvas = this.getCanvas(width, height, options);
         return canvas ? canvas.getContext('2d', options || {}) : null;
     },
 
-     // release can receive either a canvas or a context.
-    release: function(obj) {
+    // release can receive either a canvas or a context.
+    release: function (obj) {
         var canvas = obj && obj.canvas ? obj.canvas : obj;
         if (canvas && canvas.getContext) {
             // We restore contexts on release(), see getCanvas()
             canvas.getContext('2d').restore();
             this.canvases.push(canvas);
+            this.sizeMap.set(canvas.width + 'x' + canvas.height, canvas);
         }
     }
 };
