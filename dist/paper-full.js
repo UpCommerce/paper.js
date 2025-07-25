@@ -9,7 +9,7 @@
  *
  * All rights reserved.
  *
- * Date: Thu Jul 24 09:34:50 2025 +0200
+ * Date: Fri Jul 25 17:32:22 2025 +0200
  *
  ***
  *
@@ -11661,16 +11661,11 @@ var TextItem = Item.extend({
 	setTextureFill: function (url) {
 		var that = this;
 
-		if (this._textureFill && url === this._textureFill.src) {
-			return;
-		}
-
 		function emit(event) {
 			var view = that.getView(),
 				type = event && event.type || 'load';
 			if (view && that.responds(type)) {
 				paper = view._scope;
-				console.log('TextItem loaded');
 				that.emit(type, new Event(event));
 			}
 		}

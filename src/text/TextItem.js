@@ -150,17 +150,11 @@ var TextItem = Item.extend(/** @lends TextItem# */{
     setTextureFill: function (url) {
         var that = this;
 
-        if (this._textureFill && url === this._textureFill.src) {
-            // If the texture is already set, do nothing.
-            return;
-        }
-
         function emit(event) {
             var view = that.getView(),
                 type = event && event.type || 'load';
             if (view && that.responds(type)) {
                 paper = view._scope;
-                console.log('TextItem loaded');
                 that.emit(type, new Event(event));
             }
         }
