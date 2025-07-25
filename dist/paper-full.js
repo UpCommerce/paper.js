@@ -9,7 +9,7 @@
  *
  * All rights reserved.
  *
- * Date: Wed Jul 23 14:05:21 2025 +0200
+ * Date: Thu Jul 24 09:34:50 2025 +0200
  *
  ***
  *
@@ -11573,6 +11573,39 @@ var PathFitter = Base.extend({
 	}
 });
 
+var ImageCache = {
+	_cache: new Map(),
+	_order: [],
+	_maxSize: 10,
+
+	get: function (url) {
+		var cachedEntry = this._cache.get(url);
+		if (cachedEntry) {
+			var index = this._order.indexOf(url);
+			if (index > -1) {
+				this._order.splice(index, 1);
+			}
+			this._order.push(url);
+			return cachedEntry.image;
+		}
+		return null;
+	},
+
+	set: function (url, image) {
+		while (this._order.length >= this._maxSize) {
+			var oldest = this._order.shift();
+			this._cache.delete(oldest);
+		}
+
+		this._cache.set(url, { image: image, timestamp: Date.now() });
+		this._order.push(url);
+	},
+
+	has: function (url) {
+		return this._cache.has(url);
+	}
+};
+
 var TextItem = Item.extend({
 	_class: 'TextItem',
 	_applyMatrix: false,
@@ -11642,6 +11675,15 @@ var TextItem = Item.extend({
 			}
 		}
 
+		var cachedImage = ImageCache.get(url);
+		if (cachedImage) {
+			that._loaded = true;
+			that._textureFill = cachedImage;
+			that._changed(129);
+			emit({ type: 'load' });
+			return;
+		}
+
 		var image = new self.Image();
 		image.crossOrigin = 'anonymous';
 		image.src = url;
@@ -11652,6 +11694,7 @@ var TextItem = Item.extend({
 			load: function (event) {
 				that._loaded = true;
 				that._textureFill = image;
+				ImageCache.set(url, image);
 				that._changed(129);
 				emit(event);
 			},
@@ -11727,12 +11770,18 @@ var PointText = TextItem.extend({
 				}
 			} else {
 				var bounds = this._getBounds();
-				var metrics = ctx.measureText(line);
-				const textWidth = metrics.actualBoundingBoxRight - metrics.actualBoundingBoxLeft;
-				var scaling = 1000 / textWidth;
-				var newCtx = CanvasProvider.getContext(textWidth * scaling, bounds.height * scaling * 1.5);
+				const textWidth = bounds.width;
+				var scaling = Math.max(5, textWidth / 50);
+				var canvasWidth = Math.round(textWidth * scaling);
+				var canvasHeight = Math.round(bounds.height * scaling * 1.5);
+
+				if (canvasWidth <= 0 || canvasHeight <= 0) {
+					continue;
+				}
+
+				var newCtx = CanvasProvider.getContext(canvasWidth, canvasHeight);
 				this._setStyles(newCtx, param, viewMatrix);
-				newCtx.shadowColor = 'rgba(0,0,0,0)';
+				newCtx.shadowColor = null;
 				newCtx.scale(scaling, scaling);
 				newCtx.translate(0, bounds.height);
 				newCtx.font = ctx.font;
@@ -11742,11 +11791,7 @@ var PointText = TextItem.extend({
 				}
 
 				if (this._textureFill) {
-					var dx = 0;
-					if (ctx.textAlign == "center") {
-						dx = -textWidth / 2;
-					}
-					newCtx.translate(bounds.x - dx, bounds.y);
+					newCtx.translate(bounds.x, bounds.y);
 					newCtx.globalCompositeOperation = "source-atop";
 					var imageRatio = this._textureFill.width / this._textureFill.height;
 
@@ -11828,9 +11873,10 @@ var PointText = TextItem.extend({
 					if (widthImage > 0 && heightImage > 0 && bounds.height > 0) {
 						newCtx.drawImage(this._textureFill, 0, 0, widthImage, heightImage);
 
-						ctx.translate(0, -bounds.height);
+						var metrics = ctx.measureText(line);
+						ctx.translate(-metrics.actualBoundingBoxLeft, -bounds.height);
 						ctx.scale(1 / scaling, 1 / scaling);
-						ctx.drawImage(newCtx.canvas, dx, 0);
+						ctx.drawImage(newCtx.canvas, 0, 0);
 						ctx.scale(scaling, scaling);
 						ctx.translate(0, bounds.height);
 
@@ -11867,7 +11913,7 @@ var PointText = TextItem.extend({
 		if (justification !== 'left')
 			x -= width / (justification === 'center' ? 2 : 1);
 		var rect = new Rectangle(x,
-			numLines ? - 0.75 * leading : 0,
+			numLines ? -0.75 * leading : 0,
 			width, numLines * leading);
 		return matrix ? matrix._transformBounds(rect, rect) : rect;
 	}
@@ -13783,8 +13829,8 @@ var CanvasView = View.extend({
 			var size = Size.read(arguments, 1);
 			if (size.isZero())
 				throw new Error(
-						'Cannot create CanvasView with the provided argument: '
-						+ Base.slice(arguments, 1));
+					'Cannot create CanvasView with the provided argument: '
+					+ Base.slice(arguments, 1));
 			canvas = CanvasProvider.getCanvas(size);
 		}
 		var ctx = this._context = canvas.getContext('2d');
@@ -13793,7 +13839,7 @@ var CanvasView = View.extend({
 		if (!/^off|false$/.test(PaperScope.getAttribute(canvas, 'hidpi'))) {
 			var deviceRatio = window.devicePixelRatio || 1,
 				backingStoreRatio = DomElement.getPrefixed(ctx,
-						'backingStorePixelRatio') || 1;
+					'backingStorePixelRatio') || 1;
 			this._pixelRatio = deviceRatio / backingStoreRatio;
 		}
 		View.call(this, project, canvas);
@@ -13822,7 +13868,7 @@ var CanvasView = View.extend({
 		}
 	},
 
-	getContext: function() {
+	getContext: function () {
 		return this._context;
 	},
 
@@ -13841,18 +13887,49 @@ var CanvasView = View.extend({
 		return pixels;
 	},
 
-	getTextWidth: function(font, lines) {
+	getTextWidth: function (font, lines) {
 		var ctx = this._context,
 			prevFont = ctx.font,
 			width = 0;
 		ctx.font = font;
-		for (var i = 0, l = lines.length; i < l; i++)
-			width = Math.max(width, ctx.measureText(lines[i]).width);
+		for (var i = 0, l = lines.length; i < l; i++) {
+			var measure = ctx.measureText(lines[i]);
+			width = Math.max(width, measure.actualBoundingBoxRight + measure.actualBoundingBoxLeft);
+		}
 		ctx.font = prevFont;
 		return width;
 	},
 
-	update: function() {
+	getTextHeight: function (font, lines) {
+		var ctx = this._context,
+			prevFont = ctx.font;
+		ctx.save();
+		ctx.setTransform(1, 0, 0, 1, 0, 0);
+		ctx.font = font;
+		var height = 0;
+		for (var i = 0, l = lines.length; i < l; i++) {
+			var measure = ctx.measureText(lines[i]);
+			height += measure.actualBoundingBoxAscent + measure.actualBoundingBoxDescent;
+		}
+		ctx.font = prevFont;
+		ctx.restore();
+		return height;
+	},
+
+	getBaseLine: function (font, lines) {
+		var ctx = this._context,
+			prevFont = ctx.font;
+		ctx.save();
+		ctx.setTransform(1, 0, 0, 1, 0, 0);
+		ctx.font = font;
+		var measure = ctx.measureText(lines.length ? lines[0] : 'M');
+		height = measure.hangingBaseline;
+		ctx.font = prevFont;
+		ctx.restore();
+		return height;
+	},
+
+	update: function () {
 		if (!this._needsUpdate)
 			return false;
 		var project = this._project,
@@ -14559,8 +14636,9 @@ var Http = {
 
 var CanvasProvider = Base.exports.CanvasProvider = {
 	canvases: [],
+	sizeMap: new Map(),
 
-	getCanvas: function(width, height, options) {
+	getCanvas: function (width, height, options) {
 		if (!window)
 			return null;
 		var canvas,
@@ -14569,6 +14647,8 @@ var CanvasProvider = Base.exports.CanvasProvider = {
 			height = width.height;
 			width = width.width;
 		}
+
+		var sizeKey = width + 'x' + height;
 		if (this.canvases.length) {
 			canvas = this.canvases.pop();
 		} else {
@@ -14578,7 +14658,7 @@ var CanvasProvider = Base.exports.CanvasProvider = {
 		var ctx = canvas.getContext('2d', options || {});
 		if (!ctx) {
 			throw new Error('Canvas ' + canvas +
-					' is unable to provide a 2D context.');
+				' is unable to provide a 2D context.');
 		}
 		if (canvas.width === width && canvas.height === height) {
 			if (clear)
@@ -14591,16 +14671,17 @@ var CanvasProvider = Base.exports.CanvasProvider = {
 		return canvas;
 	},
 
-	getContext: function(width, height, options) {
+	getContext: function (width, height, options) {
 		var canvas = this.getCanvas(width, height, options);
 		return canvas ? canvas.getContext('2d', options || {}) : null;
 	},
 
-	release: function(obj) {
+	release: function (obj) {
 		var canvas = obj && obj.canvas ? obj.canvas : obj;
 		if (canvas && canvas.getContext) {
 			canvas.getContext('2d').restore();
 			this.canvases.push(canvas);
+			this.sizeMap.set(canvas.width + 'x' + canvas.height, canvas);
 		}
 	}
 };
@@ -15125,34 +15206,47 @@ new function () {
 		return SvgElement.create('use', attrs, formatter);
 	}
 
-	function exportGradient(color) {
+	function exportGradient(color, item) {
 		var gradientNode = getDefinition(color, 'color');
+		var matrix = item._matrix;
+
+		if (item.data && item.data.originalMatrix) {
+			matrix = item.data.originalMatrix;
+		}
+
 		if (!gradientNode) {
 			var gradient = color.getGradient(),
 				radial = gradient._radial,
 				origin = color.getOrigin(),
 				destination = color.getDestination(),
 				attrs;
+
+			var transformedOrigin = matrix._inverseTransform(origin);
+			var transformedHighlight = highlight ? matrix._inverseTransform(highlight) : null;
+			var transformedDestination = matrix._inverseTransform(destination);
+
 			if (radial) {
 				attrs = {
-					cx: origin.x,
-					cy: origin.y,
-					r: origin.getDistance(destination)
+					cx: transformedOrigin.x,
+					cy: transformedOrigin.y,
+					r: transformedOrigin.getDistance(transformedDestination)
 				};
 				var highlight = color.getHighlight();
 				if (highlight) {
-					attrs.fx = highlight.x;
-					attrs.fy = highlight.y;
+					attrs.fx = transformedHighlight.x;
+					attrs.fy = transformedHighlight.y;
 				}
 			} else {
 				attrs = {
-					x1: origin.x,
-					y1: origin.y,
-					x2: destination.x,
-					y2: destination.y
+					x1: transformedOrigin.x,
+					y1: transformedOrigin.y,
+					x2: transformedDestination.x,
+					y2: transformedDestination.y
 				};
 			}
+
 			attrs.gradientUnits = 'userSpaceOnUse';
+
 			gradientNode = SvgElement.create((radial ? 'radial' : 'linear')
 				+ 'Gradient', attrs, formatter);
 			var stops = gradient._stops;

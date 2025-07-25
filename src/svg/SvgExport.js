@@ -199,39 +199,52 @@ new function () {
         return SvgElement.create('use', attrs, formatter);
     }
 
-    function exportGradient(color) {
+    function exportGradient(color, item) {
         // NOTE: As long as the fillTransform attribute is not implemented,
         // we need to create a separate gradient object for each gradient,
         // even when they share the same gradient definition.
         // http://www.svgopen.org/2011/papers/20-Separating_gradients_from_geometry/
         // TODO: Implement gradient merging in SvgImport
         var gradientNode = getDefinition(color, 'color');
+        var matrix = item._matrix;
+
+        if (item.data && item.data.originalMatrix) {
+            matrix = item.data.originalMatrix;
+        }
+
         if (!gradientNode) {
             var gradient = color.getGradient(),
                 radial = gradient._radial,
                 origin = color.getOrigin(),
                 destination = color.getDestination(),
                 attrs;
+
+            var transformedOrigin = matrix._inverseTransform(origin);
+            var transformedHighlight = highlight ? matrix._inverseTransform(highlight) : null;
+            var transformedDestination = matrix._inverseTransform(destination);
+
             if (radial) {
                 attrs = {
-                    cx: origin.x,
-                    cy: origin.y,
-                    r: origin.getDistance(destination)
+                    cx: transformedOrigin.x,
+                    cy: transformedOrigin.y,
+                    r: transformedOrigin.getDistance(transformedDestination)
                 };
                 var highlight = color.getHighlight();
                 if (highlight) {
-                    attrs.fx = highlight.x;
-                    attrs.fy = highlight.y;
+                    attrs.fx = transformedHighlight.x;
+                    attrs.fy = transformedHighlight.y;
                 }
             } else {
                 attrs = {
-                    x1: origin.x,
-                    y1: origin.y,
-                    x2: destination.x,
-                    y2: destination.y
+                    x1: transformedOrigin.x,
+                    y1: transformedOrigin.y,
+                    x2: transformedDestination.x,
+                    y2: transformedDestination.y
                 };
             }
+
             attrs.gradientUnits = 'userSpaceOnUse';
+
             gradientNode = SvgElement.create((radial ? 'radial' : 'linear')
                 + 'Gradient', attrs, formatter);
             var stops = gradient._stops;
