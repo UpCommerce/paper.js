@@ -394,7 +394,7 @@ new function () {
                 }
 
                 if (transforms.length > 0) {
-                    feImage.setAttribute('transform', transforms.join(' '));
+                    image.setAttribute('transform', transforms.join(' '));
                 }
             }
 
