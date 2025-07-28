@@ -150,46 +150,54 @@ var TextItem = Item.extend(/** @lends TextItem# */{
     setTextureFill: function (url) {
         var that = this;
 
-        function emit(event) {
-            var view = that.getView(),
-                type = event && event.type || 'load';
-            if (view && that.responds(type)) {
-                paper = view._scope;
-                that.emit(type, new Event(event));
-            }
-        }
-
-        // Check if image is already cached
-        var cachedImage = ImageCache.get(url);
-        if (cachedImage) {
+        if (!url && that._textureFill) {
             that._loaded = true;
-            that._textureFill = cachedImage;
-            that._changed(/*#=*/Change.STYLE);
-            // Emit load event for cached image
-            emit({ type: 'load' });
-            return;
+            that._textureFill = null;
+            this._changed(/*#=*/Change.STYLE);
         }
 
-        var image = new self.Image();
-        image.crossOrigin = 'anonymous';
-        image.src = url;
+        if (url) {
+            function emit(event) {
+                var view = that.getView(),
+                    type = event && event.type || 'load';
+                if (view && that.responds(type)) {
+                    paper = view._scope;
+                    that.emit(type, new Event(event));
+                }
+            }
 
-        that._loaded = (image && image.src && image.complete);
-
-        // Trigger the load event on the image once it's loaded
-        DomEvent.add(image, {
-            load: function (event) {
+            // Check if image is already cached
+            var cachedImage = ImageCache.get(url);
+            if (cachedImage) {
                 that._loaded = true;
-                that._textureFill = image;
-                // Cache the loaded image
-                ImageCache.set(url, image);
+                that._textureFill = cachedImage;
                 that._changed(/*#=*/Change.STYLE);
-                emit(event);
-            },
-            error: emit
-        });
+                // Emit load event for cached image
+                emit({ type: 'load' });
+                return;
+            }
 
-        this._changed(/*#=*/Change.STYLE);
+            var image = new self.Image();
+            image.crossOrigin = 'anonymous';
+            image.src = url;
+
+            that._loaded = (image && image.src && image.complete);
+
+            // Trigger the load event on the image once it's loaded
+            DomEvent.add(image, {
+                load: function (event) {
+                    that._loaded = true;
+                    that._textureFill = image;
+                    // Cache the loaded image
+                    ImageCache.set(url, image);
+                    that._changed(/*#=*/Change.STYLE);
+                    emit(event);
+                },
+                error: emit
+            });
+
+            this._changed(/*#=*/Change.STYLE);
+        }
     },
 
     getTextureOptions: function () {
