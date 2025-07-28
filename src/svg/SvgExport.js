@@ -280,7 +280,13 @@ new function () {
             // Create a <g/> with the text inside without transform, and apply the transform to <g/>
             // This is required for the text to be positioned correctly in the parent group.
             var attrs = getTransform(item._matrix, false),
-                group = SvgElement.create('g', attrs, formatter);
+                group = SvgElement.create('g', attrs, formatter),
+                textureOptions = item._textureOptions,
+                matrix = item._matrix;
+
+            if (item.data && item.data.originalMatrix) {
+                matrix = item.data.originalMatrix;
+            }
 
             var node = SvgElement.create('text', null,
                 formatter);
@@ -290,26 +296,107 @@ new function () {
             group.appendChild(node);
 
             var bounds = item._getBounds();
+            console.log('export text bounds', bounds);
+
             var imageRatio = item._textureFill.naturalWidth / item._textureFill.naturalHeight;
+
+            // Calculate image dimensions and positioning
+            var leftImage = 0;
+            var topImage = 0;
+            var widthImage = bounds.width;
+            var heightImage = bounds.width / imageRatio;
+
+            if (bounds.height > bounds.width) {
+                heightImage = bounds.height;
+                widthImage = bounds.height * imageRatio;
+            }
+
+            if (textureOptions && widthImage > 0 && heightImage > 0) {
+                var hasTextWidth = textureOptions.hasOwnProperty("textWidth");
+                var hasTextHeight = textureOptions.hasOwnProperty("textHeight");
+
+                if (hasTextWidth) {
+                    widthImage = Math.round(textureOptions.textWidth);
+                    heightImage = Math.round(widthImage / imageRatio);
+                }
+
+                if (hasTextWidth && hasTextHeight && textureOptions.textHeight > textureOptions.textWidth) {
+                    heightImage = Math.round(textureOptions.textHeight);
+                    widthImage = Math.round(textureOptions.textHeight * imageRatio);
+                }
+
+                if (textureOptions.hasOwnProperty("offsetLeft")) {
+                    leftImage = -textureOptions.offsetLeft;
+                }
+                if (textureOptions.hasOwnProperty("offsetTop")) {
+                    topImage = -textureOptions.offsetTop;
+                }
+
+                if (textureOptions.syncRatio) {
+                    if (textureOptions.hasOwnProperty("scaling")) {
+                        widthImage *= textureOptions.scaling;
+                        heightImage *= textureOptions.scaling;
+                    }
+                } else {
+                    if (textureOptions.hasOwnProperty("scalingX")) {
+                        widthImage *= textureOptions.scalingX;
+                    }
+                    if (textureOptions.hasOwnProperty("scalingY")) {
+                        heightImage *= textureOptions.scalingY;
+                    }
+                }
+
+                if (textureOptions.hasOwnProperty("leftPosition")) {
+                    leftImage += textureOptions.leftPosition;
+                }
+                if (textureOptions.hasOwnProperty("topPosition")) {
+                    topImage -= textureOptions.topPosition;
+                }
+            }
 
             // First add the textureFill image in def
             var image = SvgElement.create('image');
             image.setAttribute('href', item._textureFill.src);
-            image.setAttribute('width', bounds.width + 'px');
-            image.setAttribute('height', bounds.width / imageRatio + 'px');
+            image.setAttribute('width', widthImage + 'px');
+            image.setAttribute('height', heightImage + 'px');
 
             setDefinition(item, image, 'image');
 
             var filter = SvgElement.create('filter');
 
-
             var feImage = SvgElement.create('feImage', {
                 href: '#' + image.id,
-                x: bounds.x + 'px',
-                y: bounds.y + 'px',
-                width: bounds.width + 'px',
-                height: bounds.width / imageRatio + 'px'
+                x: (bounds.x + leftImage) + 'px',
+                y: (bounds.y + topImage) + 'px',
+                width: widthImage + 'px',
+                height: heightImage + 'px'
             }, formatter);
+
+            // Handle transformations
+            if (textureOptions && widthImage > 0 && heightImage > 0) {
+                var transforms = [];
+
+                if (textureOptions.horizontalFlip || textureOptions.verticalFlip) {
+                    var scaleX = textureOptions.horizontalFlip ? -1 : 1;
+                    var scaleY = textureOptions.verticalFlip ? -1 : 1;
+                    var translateX = textureOptions.horizontalFlip ? widthImage : 0;
+                    var translateY = textureOptions.verticalFlip ? heightImage : 0;
+                    transforms.push('translate(' + translateX + ',' + translateY + ')');
+                    transforms.push('scale(' + scaleX + ',' + scaleY + ')');
+                }
+
+                if (textureOptions.hasOwnProperty("rotation")) {
+                    var centerX = widthImage / 2;
+                    var centerY = heightImage / 2;
+                    transforms.push('translate(' + centerX + ',' + centerY + ')');
+                    transforms.push('rotate(' + textureOptions.rotation + ')');
+                    transforms.push('translate(' + (-centerX) + ',' + (-centerY) + ')');
+                }
+
+                if (transforms.length > 0) {
+                    feImage.setAttribute('transform', transforms.join(' '));
+                }
+            }
 
             var feComposite = SvgElement.create('feComposite', {
                 in2: 'SourceGraphic',
