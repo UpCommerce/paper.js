@@ -296,7 +296,6 @@ new function () {
             group.appendChild(node);
 
             var bounds = item._getBounds();
-            console.log('export text bounds', bounds);
 
             var imageRatio = item._textureFill.naturalWidth / item._textureFill.naturalHeight;
 
