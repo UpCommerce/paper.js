@@ -206,7 +206,8 @@ new function () {
         // http://www.svgopen.org/2011/papers/20-Separating_gradients_from_geometry/
         // TODO: Implement gradient merging in SvgImport
         var gradientNode = getDefinition(color, 'color');
-        var matrix = item._matrix;
+        var matrix = (item.data && item.data.originalMatrix) || item._matrix;
+        var bounds = item._getBounds(matrix.inverted(), { cacheItem: item }).rect;
 
         if (item.data && item.data.originalMatrix) {
             matrix = item.data.originalMatrix;
@@ -219,14 +220,18 @@ new function () {
                 destination = color.getDestination(),
                 attrs;
 
-            var transformedOrigin = matrix._inverseTransform(origin);
+
+
+            // The origin in the output SVG is different from paper origin.
+            // 0,0 here is the center of element, but 0,0 on svg is bottom left
+            var transformedOrigin = item.data.localGradientOrigin;
+            var transformedDestination = item.data.localGradientDestination;
             var transformedHighlight = highlight ? matrix._inverseTransform(highlight) : null;
-            var transformedDestination = matrix._inverseTransform(destination);
 
             if (radial) {
                 attrs = {
-                    cx: transformedOrigin.x,
-                    cy: transformedOrigin.y,
+                    cx: transformedOrigin.x + bounds.width / 2,
+                    cy: (transformedOrigin.y - bounds.height / 2) / 2,
                     r: transformedOrigin.getDistance(transformedDestination)
                 };
                 var highlight = color.getHighlight();
@@ -236,10 +241,10 @@ new function () {
                 }
             } else {
                 attrs = {
-                    x1: transformedOrigin.x,
-                    y1: transformedOrigin.y,
-                    x2: transformedDestination.x,
-                    y2: transformedDestination.y
+                    x1: transformedOrigin.x + bounds.width / 2,
+                    y1: (transformedOrigin.y - bounds.height / 2) / 2,
+                    x2: transformedDestination.x + bounds.width / 2,
+                    y2: (transformedDestination.y - bounds.height / 2) / 2
                 };
             }
 
@@ -271,11 +276,23 @@ new function () {
     }
 
     function exportText(item) {
-        if (!item._textureFill) {
+        var hasGradients = (item.data && item.data.gradientSettings) || (item.parent && item.parent.data && item.parent.data.gradientSettings);
+        if (!item._textureFill && !hasGradients) {
             var node = SvgElement.create('text', getTransform(item._matrix, true),
                 formatter);
             node.textContent = item._content;
             return node;
+        } else if (hasGradients) {
+            var attrs = getTransform(item._matrix, false),
+                group = SvgElement.create('g', attrs, formatter)
+
+            var node = SvgElement.create('text', null,
+                formatter);
+
+            node.textContent = item._content;
+
+            group.appendChild(node);
+            return group;
         } else {
             // Create a <g/> with the text inside without transform, and apply the transform to <g/>
             // This is required for the text to be positioned correctly in the parent group.
