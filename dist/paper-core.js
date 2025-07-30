@@ -9,7 +9,7 @@
  *
  * All rights reserved.
  *
- * Date: Fri Jul 25 17:46:18 2025 +0200
+ * Date: Tue Jul 29 19:43:33 2025 +0200
  *
  ***
  *
@@ -11871,10 +11871,15 @@ var PointText = TextItem.extend({
 					}
 
 					if (widthImage > 0 && heightImage > 0 && bounds.height > 0) {
-						newCtx.drawImage(this._textureFill, 0, 0, widthImage, heightImage);
-
 						var metrics = ctx.measureText(line);
-						ctx.translate(-metrics.actualBoundingBoxLeft, -bounds.height);
+						let boundingBoxLeft = metrics.actualBoundingBoxLeft;
+						if(ctx.textAlign == "center"){
+							const halfWidth = metrics.width / 2;
+							boundingBoxLeft = halfWidth;
+							newCtx.translate(halfWidth,0);
+						}
+						newCtx.drawImage(this._textureFill, 0, 0, widthImage, heightImage);
+						ctx.translate(-boundingBoxLeft, -bounds.height);
 						ctx.scale(1 / scaling, 1 / scaling);
 						ctx.drawImage(newCtx.canvas, 0, 0);
 						ctx.scale(scaling, scaling);
@@ -13821,127 +13826,134 @@ new function() {
 	};
 });
 
-var CanvasView = View.extend({
-	_class: 'CanvasView',
+var CanvasView = View.extend(
+	 {
+		_class: "CanvasView",
 
-	initialize: function CanvasView(project, canvas) {
-		if (!(canvas instanceof window.HTMLCanvasElement)) {
-			var size = Size.read(arguments, 1);
-			if (size.isZero())
-				throw new Error(
-					'Cannot create CanvasView with the provided argument: '
-					+ Base.slice(arguments, 1));
-			canvas = CanvasProvider.getCanvas(size);
-		}
-		var ctx = this._context = canvas.getContext('2d');
-		ctx.save();
-		this._pixelRatio = 1;
-		if (!/^off|false$/.test(PaperScope.getAttribute(canvas, 'hidpi'))) {
-			var deviceRatio = window.devicePixelRatio || 1,
-				backingStoreRatio = DomElement.getPrefixed(ctx,
-					'backingStorePixelRatio') || 1;
-			this._pixelRatio = deviceRatio / backingStoreRatio;
-		}
-		View.call(this, project, canvas);
-		this._needsUpdate = true;
-	},
-
-	remove: function remove() {
-		this._context.restore();
-		return remove.base.call(this);
-	},
-
-	_setElementSize: function _setElementSize(width, height) {
-		var pixelRatio = this._pixelRatio;
-		_setElementSize.base.call(this, width * pixelRatio, height * pixelRatio);
-		if (pixelRatio !== 1) {
-			var element = this._element,
-				ctx = this._context;
-			if (!PaperScope.hasAttribute(element, 'resize')) {
-				var style = element.style;
-				style.width = width + 'px';
-				style.height = height + 'px';
+		initialize: function CanvasView(project, canvas) {
+			if (!(canvas instanceof window.HTMLCanvasElement)) {
+				var size = Size.read(arguments, 1);
+				if (size.isZero())
+					throw new Error(
+						"Cannot create CanvasView with the provided argument: " +
+							Base.slice(arguments, 1)
+					);
+				canvas = CanvasProvider.getCanvas(size);
 			}
-			ctx.restore();
+			var ctx = (this._context = canvas.getContext("2d"));
 			ctx.save();
-			ctx.scale(pixelRatio, pixelRatio);
-		}
-	},
+			this._pixelRatio = 1;
+			if (!/^off|false$/.test(PaperScope.getAttribute(canvas, "hidpi"))) {
+				var deviceRatio = window.devicePixelRatio || 1,
+					backingStoreRatio =
+						DomElement.getPrefixed(ctx, "backingStorePixelRatio") ||
+						1;
+				this._pixelRatio = deviceRatio / backingStoreRatio;
+			}
+			View.call(this, project, canvas);
+			this._needsUpdate = true;
+		},
 
-	getContext: function () {
-		return this._context;
-	},
+		remove: function remove() {
+			this._context.restore();
+			return remove.base.call(this);
+		},
 
-	getPixelSize: function getPixelSize(size) {
-		var agent = paper.agent,
-			pixels;
-		if (agent && agent.firefox) {
-			pixels = getPixelSize.base.call(this, size);
-		} else {
+		_setElementSize: function _setElementSize(width, height) {
+			var pixelRatio = this._pixelRatio;
+			_setElementSize.base.call(
+				this,
+				width * pixelRatio,
+				height * pixelRatio
+			);
+			if (pixelRatio !== 1) {
+				var element = this._element,
+					ctx = this._context;
+				if (!PaperScope.hasAttribute(element, "resize")) {
+					var style = element.style;
+					style.width = width + "px";
+					style.height = height + "px";
+				}
+				ctx.restore();
+				ctx.save();
+				ctx.scale(pixelRatio, pixelRatio);
+			}
+		},
+
+		getContext: function () {
+			return this._context;
+		},
+
+		getPixelSize: function getPixelSize(size) {
+			var agent = paper.agent,
+				pixels;
+			if (agent && agent.firefox) {
+				pixels = getPixelSize.base.call(this, size);
+			} else {
+				var ctx = this._context,
+					prevFont = ctx.font;
+				ctx.font = size + " serif";
+				pixels = parseFloat(ctx.font);
+				ctx.font = prevFont;
+			}
+			return pixels;
+		},
+
+		getTextWidth: function (font, lines) {
+			var ctx = this._context,
+				prevFont = ctx.font,
+				width = 0;
+			ctx.font = font;
+			for (var i = 0, l = lines.length; i < l; i++) {
+				width = Math.max(width, ctx.measureText(lines[i]).width);
+			}
+			ctx.font = prevFont;
+			return width;
+		},
+
+		getTextHeight: function (font, lines) {
 			var ctx = this._context,
 				prevFont = ctx.font;
-			ctx.font = size + ' serif';
-			pixels = parseFloat(ctx.font);
+			ctx.save();
+			ctx.setTransform(1, 0, 0, 1, 0, 0);
+			ctx.font = font;
+			var height = 0;
+			for (var i = 0, l = lines.length; i < l; i++) {
+				var measure = ctx.measureText(lines[i]);
+				height +=
+					measure.actualBoundingBoxAscent +
+					measure.actualBoundingBoxDescent;
+			}
 			ctx.font = prevFont;
-		}
-		return pixels;
-	},
+			ctx.restore();
+			return height;
+		},
 
-	getTextWidth: function (font, lines) {
-		var ctx = this._context,
-			prevFont = ctx.font,
-			width = 0;
-		ctx.font = font;
-		for (var i = 0, l = lines.length; i < l; i++) {
-			var measure = ctx.measureText(lines[i]);
-			width = Math.max(width, measure.actualBoundingBoxRight + measure.actualBoundingBoxLeft);
-		}
-		ctx.font = prevFont;
-		return width;
-	},
+		getBaseLine: function (font, lines) {
+			var ctx = this._context,
+				prevFont = ctx.font;
+			ctx.save();
+			ctx.setTransform(1, 0, 0, 1, 0, 0);
+			ctx.font = font;
+			var measure = ctx.measureText(lines.length ? lines[0] : "M");
+			height = measure.hangingBaseline;
+			ctx.font = prevFont;
+			ctx.restore();
+			return height;
+		},
 
-	getTextHeight: function (font, lines) {
-		var ctx = this._context,
-			prevFont = ctx.font;
-		ctx.save();
-		ctx.setTransform(1, 0, 0, 1, 0, 0);
-		ctx.font = font;
-		var height = 0;
-		for (var i = 0, l = lines.length; i < l; i++) {
-			var measure = ctx.measureText(lines[i]);
-			height += measure.actualBoundingBoxAscent + measure.actualBoundingBoxDescent;
-		}
-		ctx.font = prevFont;
-		ctx.restore();
-		return height;
-	},
-
-	getBaseLine: function (font, lines) {
-		var ctx = this._context,
-			prevFont = ctx.font;
-		ctx.save();
-		ctx.setTransform(1, 0, 0, 1, 0, 0);
-		ctx.font = font;
-		var measure = ctx.measureText(lines.length ? lines[0] : 'M');
-		height = measure.hangingBaseline;
-		ctx.font = prevFont;
-		ctx.restore();
-		return height;
-	},
-
-	update: function () {
-		if (!this._needsUpdate)
-			return false;
-		var project = this._project,
-			ctx = this._context,
-			size = this._viewSize;
-		ctx.clearRect(0, 0, size.width + 1, size.height + 1);
-		if (project)
-			project.draw(ctx, this._matrix, this._pixelRatio);
-		this._needsUpdate = false;
-		return true;
+		update: function () {
+			if (!this._needsUpdate) return false;
+			var project = this._project,
+				ctx = this._context,
+				size = this._viewSize;
+			ctx.clearRect(0, 0, size.width + 1, size.height + 1);
+			if (project) project.draw(ctx, this._matrix, this._pixelRatio);
+			this._needsUpdate = false;
+			return true;
+		},
 	}
-});
+);
 
 var Event = Base.extend({
 	_class: 'Event',
@@ -15208,7 +15220,8 @@ new function () {
 
 	function exportGradient(color, item) {
 		var gradientNode = getDefinition(color, 'color');
-		var matrix = item._matrix;
+		var matrix = (item.data && item.data.originalMatrix) || item._matrix;
+		var bounds = item._getBounds(matrix.inverted(), { cacheItem: item }).rect;
 
 		if (item.data && item.data.originalMatrix) {
 			matrix = item.data.originalMatrix;
@@ -15221,14 +15234,14 @@ new function () {
 				destination = color.getDestination(),
 				attrs;
 
-			var transformedOrigin = matrix._inverseTransform(origin);
+			var transformedOrigin = item.data.localGradientOrigin;
+			var transformedDestination = item.data.localGradientDestination;
 			var transformedHighlight = highlight ? matrix._inverseTransform(highlight) : null;
-			var transformedDestination = matrix._inverseTransform(destination);
 
 			if (radial) {
 				attrs = {
-					cx: transformedOrigin.x,
-					cy: transformedOrigin.y,
+					cx: transformedOrigin.x + bounds.width / 2,
+					cy: (transformedOrigin.y - bounds.height / 2) / 2,
 					r: transformedOrigin.getDistance(transformedDestination)
 				};
 				var highlight = color.getHighlight();
@@ -15238,10 +15251,10 @@ new function () {
 				}
 			} else {
 				attrs = {
-					x1: transformedOrigin.x,
-					y1: transformedOrigin.y,
-					x2: transformedDestination.x,
-					y2: transformedDestination.y
+					x1: transformedOrigin.x + bounds.width / 2,
+					y1: (transformedOrigin.y - bounds.height / 2) / 2,
+					x2: transformedDestination.x + bounds.width / 2,
+					y2: (transformedDestination.y - bounds.height / 2) / 2
 				};
 			}
 
@@ -15271,14 +15284,32 @@ new function () {
 	}
 
 	function exportText(item) {
-		if (!item._textureFill) {
+		var hasGradients = (item.data && item.data.gradientSettings) || (item.parent && item.parent.data && item.parent.data.gradientSettings);
+		if (!item._textureFill && !hasGradients) {
 			var node = SvgElement.create('text', getTransform(item._matrix, true),
 				formatter);
 			node.textContent = item._content;
 			return node;
+		} else if (hasGradients) {
+			var attrs = getTransform(item._matrix, false),
+				group = SvgElement.create('g', attrs, formatter)
+
+			var node = SvgElement.create('text', null,
+				formatter);
+
+			node.textContent = item._content;
+
+			group.appendChild(node);
+			return group;
 		} else {
 			var attrs = getTransform(item._matrix, false),
-				group = SvgElement.create('g', attrs, formatter);
+				group = SvgElement.create('g', attrs, formatter),
+				textureOptions = item._textureOptions,
+				matrix = item._matrix;
+
+			if (item.data && item.data.originalMatrix) {
+				matrix = item.data.originalMatrix;
+			}
 
 			var node = SvgElement.create('text', null,
 				formatter);
@@ -15288,12 +15319,66 @@ new function () {
 			group.appendChild(node);
 
 			var bounds = item._getBounds();
+
 			var imageRatio = item._textureFill.naturalWidth / item._textureFill.naturalHeight;
+
+			var leftImage = 0;
+			var topImage = 0;
+			var widthImage = bounds.width;
+			var heightImage = bounds.width / imageRatio;
+
+			if (bounds.height > bounds.width) {
+				heightImage = bounds.height;
+				widthImage = bounds.height * imageRatio;
+			}
+
+			if (textureOptions && widthImage > 0 && heightImage > 0) {
+				var hasTextWidth = textureOptions.hasOwnProperty("textWidth");
+				var hasTextHeight = textureOptions.hasOwnProperty("textHeight");
+
+				if (hasTextWidth) {
+					widthImage = Math.round(textureOptions.textWidth);
+					heightImage = Math.round(widthImage / imageRatio);
+				}
+
+				if (hasTextWidth && hasTextHeight && textureOptions.textHeight > textureOptions.textWidth) {
+					heightImage = Math.round(textureOptions.textHeight);
+					widthImage = Math.round(textureOptions.textHeight * imageRatio);
+				}
+
+				if (textureOptions.hasOwnProperty("offsetLeft")) {
+					leftImage = -textureOptions.offsetLeft;
+				}
+				if (textureOptions.hasOwnProperty("offsetTop")) {
+					topImage = -textureOptions.offsetTop;
+				}
+
+				if (textureOptions.syncRatio) {
+					if (textureOptions.hasOwnProperty("scaling")) {
+						widthImage *= textureOptions.scaling;
+						heightImage *= textureOptions.scaling;
+					}
+				} else {
+					if (textureOptions.hasOwnProperty("scalingX")) {
+						widthImage *= textureOptions.scalingX;
+					}
+					if (textureOptions.hasOwnProperty("scalingY")) {
+						heightImage *= textureOptions.scalingY;
+					}
+				}
+
+				if (textureOptions.hasOwnProperty("leftPosition")) {
+					leftImage += textureOptions.leftPosition;
+				}
+				if (textureOptions.hasOwnProperty("topPosition")) {
+					topImage -= textureOptions.topPosition;
+				}
+			}
 
 			var image = SvgElement.create('image');
 			image.setAttribute('href', item._textureFill.src);
-			image.setAttribute('width', bounds.width + 'px');
-			image.setAttribute('height', bounds.width / imageRatio + 'px');
+			image.setAttribute('width', widthImage + 'px');
+			image.setAttribute('height', heightImage + 'px');
 
 			setDefinition(item, image, 'image');
 
@@ -15301,11 +15386,36 @@ new function () {
 
 			var feImage = SvgElement.create('feImage', {
 				href: '#' + image.id,
-				x: bounds.x + 'px',
-				y: bounds.y + 'px',
-				width: bounds.width + 'px',
-				height: bounds.width / imageRatio + 'px'
+				x: (bounds.x + leftImage) + 'px',
+				y: (bounds.y + topImage) + 'px',
+				width: widthImage + 'px',
+				height: heightImage + 'px'
 			}, formatter);
+
+			if (textureOptions && widthImage > 0 && heightImage > 0) {
+				var transforms = [];
+
+				if (textureOptions.horizontalFlip || textureOptions.verticalFlip) {
+					var scaleX = textureOptions.horizontalFlip ? -1 : 1;
+					var scaleY = textureOptions.verticalFlip ? -1 : 1;
+					var translateX = textureOptions.horizontalFlip ? widthImage : 0;
+					var translateY = textureOptions.verticalFlip ? heightImage : 0;
+					transforms.push('translate(' + translateX + ',' + translateY + ')');
+					transforms.push('scale(' + scaleX + ',' + scaleY + ')');
+				}
+
+				if (textureOptions.hasOwnProperty("rotation")) {
+					var centerX = widthImage / 2;
+					var centerY = heightImage / 2;
+					transforms.push('translate(' + centerX + ',' + centerY + ')');
+					transforms.push('rotate(' + textureOptions.rotation + ')');
+					transforms.push('translate(' + (-centerX) + ',' + (-centerY) + ')');
+				}
+
+				if (transforms.length > 0) {
+					image.setAttribute('transform', transforms.join(' '));
+				}
+			}
 
 			var feComposite = SvgElement.create('feComposite', {
 				in2: 'SourceGraphic',
