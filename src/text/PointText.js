@@ -94,7 +94,7 @@ var PointText = TextItem.extend(/** @lends PointText# */{
 
 			var line = lines[i];
 
-			if (!this._textureFill) {
+			if (!this._textureFill && !this.data.textureFillStrokedText) {
 				if (hasFill) {
 					ctx.fillText(line, 0, 0);
 					ctx.shadowColor = 'rgba(0,0,0,0)';
@@ -103,6 +103,48 @@ var PointText = TextItem.extend(/** @lends PointText# */{
 				if (hasStroke) {
 					ctx.strokeText(line, 0, 0);
 				}
+			} else if (this.data.textureFillStrokedText) {
+				// Draw a stroke with the text shape as hole
+				var bounds = this._getBounds();
+				const textWidth = bounds.width;
+				var scaling = Math.max(5, textWidth / 50); // GEneric good quality for the rendering
+				var canvasWidth = Math.round(textWidth * scaling);
+				var canvasHeight = Math.round(bounds.height * scaling * 1.5);
+
+				if (canvasWidth <= 0 || canvasHeight <= 0) {
+					// If the text is too small, we don't render it.
+					continue;
+				}
+
+				var newCtx = CanvasProvider.getContext(canvasWidth, canvasHeight);
+				this._setStyles(newCtx, param, viewMatrix);
+				newCtx.shadowColor = null;
+				newCtx.scale(scaling, scaling);
+				newCtx.translate(0, bounds.height);
+				newCtx.font = ctx.font;
+
+				if (hasStroke) {
+					newCtx.strokeText(line, 0, 0);
+				}
+
+				newCtx.globalCompositeOperation = "destination-out";
+
+				if (hasFill) {
+					newCtx.fillText(line, 0, 0);
+				}
+
+				var metrics = ctx.measureText(line);
+				let boundingBoxLeft = metrics.actualBoundingBoxLeft;
+
+				// newCtx is bigger then the main, so to avoid a double scaling
+
+				ctx.translate(-boundingBoxLeft, -bounds.height);
+				// we need to scale it down the main ctx for a moment.
+				ctx.scale(1 / scaling, 1 / scaling);
+				ctx.drawImage(newCtx.canvas, 0, 0);
+				ctx.scale(scaling, scaling);
+				ctx.translate(0, bounds.height);
+
 			} else {
 				var bounds = this._getBounds();
 				const textWidth = bounds.width;
@@ -126,120 +168,118 @@ var PointText = TextItem.extend(/** @lends PointText# */{
 					newCtx.fillText(line, 0, 0);
 				}
 
-				if (this._textureFill) {
-					newCtx.translate(bounds.x, bounds.y);
-					newCtx.globalCompositeOperation = "source-atop";
-					var imageRatio = this._textureFill.width / this._textureFill.height;
+				newCtx.translate(bounds.x, bounds.y);
+				newCtx.globalCompositeOperation = "source-in";
+				var imageRatio = this._textureFill.width / this._textureFill.height;
 
 
-					var leftImage = 0;
-					var topImage = 0;
-					var widthImage = textWidth;
-					var heightImage = textWidth / imageRatio;
+				var leftImage = 0;
+				var topImage = 0;
+				var widthImage = textWidth;
+				var heightImage = textWidth / imageRatio;
 
-					if (bounds.height > bounds.width) {
-						heightImage = bounds.height;
-						widthImage = bounds.height * imageRatio;
+				if (bounds.height > bounds.width) {
+					heightImage = bounds.height;
+					widthImage = bounds.height * imageRatio;
+				}
+
+				if (this._textureOptions && widthImage > 0 && heightImage > 0) {
+					var hasTextWidth = this._textureOptions.hasOwnProperty("textWidth");
+					var hasTextHeight = this._textureOptions.hasOwnProperty("textHeight");
+
+					if (hasTextWidth) {
+						widthImage = Math.round(this._textureOptions.textWidth);
+						heightImage = Math.round(widthImage / imageRatio);
 					}
 
-					if (this._textureOptions && widthImage > 0 && heightImage > 0) {
-						var hasTextWidth = this._textureOptions.hasOwnProperty("textWidth");
-						var hasTextHeight = this._textureOptions.hasOwnProperty("textHeight");
+					if (hasTextWidth && hasTextHeight && this._textureOptions.textHeight > this._textureOptions.textWidth) {
+						heightImage = Math.round(this._textureOptions.textHeight);
+						widthImage = Math.round(this._textureOptions.textHeight * imageRatio);
+					}
 
-						if (hasTextWidth) {
-							widthImage = Math.round(this._textureOptions.textWidth);
-							heightImage = Math.round(widthImage / imageRatio);
-						}
+					if (this._textureOptions.hasOwnProperty("offsetLeft")) {
+						leftImage = -this._textureOptions.offsetLeft;
+					}
+					if (this._textureOptions.hasOwnProperty("offsetTop")) {
+						topImage = -this._textureOptions.offsetTop;
+					}
 
-						if (hasTextWidth && hasTextHeight && this._textureOptions.textHeight > this._textureOptions.textWidth) {
-							heightImage = Math.round(this._textureOptions.textHeight);
-							widthImage = Math.round(this._textureOptions.textHeight * imageRatio);
+					if (this._textureOptions.syncRatio) {
+						if (this._textureOptions.hasOwnProperty("scaling")) {
+							widthImage *= this._textureOptions.scaling;
+							heightImage *= this._textureOptions.scaling;
 						}
-
-						if (this._textureOptions.hasOwnProperty("offsetLeft")) {
-							leftImage = -this._textureOptions.offsetLeft;
+					} else {
+						if (this._textureOptions.hasOwnProperty("scalingX")) {
+							widthImage *= this._textureOptions.scalingX;
 						}
-						if (this._textureOptions.hasOwnProperty("offsetTop")) {
-							topImage = -this._textureOptions.offsetTop;
-						}
-
-						if (this._textureOptions.syncRatio) {
-							if (this._textureOptions.hasOwnProperty("scaling")) {
-								widthImage *= this._textureOptions.scaling;
-								heightImage *= this._textureOptions.scaling;
-							}
-						} else {
-							if (this._textureOptions.hasOwnProperty("scalingX")) {
-								widthImage *= this._textureOptions.scalingX;
-							}
-							if (this._textureOptions.hasOwnProperty("scalingY")) {
-								heightImage *= this._textureOptions.scalingY;
-							}
-						}
-
-
-						if (this._textureOptions.hasOwnProperty("leftPosition")) {
-							leftImage += this._textureOptions.leftPosition;
-						}
-						if (this._textureOptions.hasOwnProperty("topPosition")) {
-							topImage -= this._textureOptions.topPosition;
+						if (this._textureOptions.hasOwnProperty("scalingY")) {
+							heightImage *= this._textureOptions.scalingY;
 						}
 					}
 
-					newCtx.translate(leftImage, topImage);
 
-					if (this._textureOptions && widthImage > 0 && heightImage > 0) {
+					if (this._textureOptions.hasOwnProperty("leftPosition")) {
+						leftImage += this._textureOptions.leftPosition;
+					}
+					if (this._textureOptions.hasOwnProperty("topPosition")) {
+						topImage -= this._textureOptions.topPosition;
+					}
+				}
 
-						if (this._textureOptions.horizontalFlip) {
-							newCtx.translate(widthImage, 0);
-							newCtx.scale(-1, 1);
-						}
-						if (this._textureOptions.verticalFlip) {
-							newCtx.translate(0, heightImage);
-							newCtx.scale(1, -1);
-						}
+				newCtx.translate(leftImage, topImage);
 
-						if (this._textureOptions.hasOwnProperty("rotation")) {
-							newCtx.translate(widthImage / 2, heightImage / 2);
-							var radiants = (this._textureOptions.rotation * Math.PI) / 180;
-							newCtx.rotate(radiants);
-							newCtx.translate(-widthImage / 2, -heightImage / 2);
-						}
+				if (this._textureOptions && widthImage > 0 && heightImage > 0) {
 
+					if (this._textureOptions.horizontalFlip) {
+						newCtx.translate(widthImage, 0);
+						newCtx.scale(-1, 1);
+					}
+					if (this._textureOptions.verticalFlip) {
+						newCtx.translate(0, heightImage);
+						newCtx.scale(1, -1);
 					}
 
-					if (widthImage > 0 && heightImage > 0 && bounds.height > 0) {
-						var metrics = ctx.measureText(line);
-						let boundingBoxLeft = metrics.actualBoundingBoxLeft;
-						if(ctx.textAlign == "center"){
-							const halfWidth = metrics.width / 2;
-							boundingBoxLeft = halfWidth;
-							newCtx.translate(halfWidth,0);
-						}
-						newCtx.drawImage(this._textureFill, 0, 0, widthImage, heightImage);
-						// newCtx is bigger then the main, so to avoid a double scaling
-						
-						ctx.translate(-boundingBoxLeft, -bounds.height);
-						// we need to scale it down the main ctx for a moment.
-						ctx.scale(1 / scaling, 1 / scaling);
-						ctx.drawImage(newCtx.canvas, 0, 0);
-						ctx.scale(scaling, scaling);
-						ctx.translate(0, bounds.height);
+					if (this._textureOptions.hasOwnProperty("rotation")) {
+						newCtx.translate(widthImage / 2, heightImage / 2);
+						var radiants = (this._textureOptions.rotation * Math.PI) / 180;
+						newCtx.rotate(radiants);
+						newCtx.translate(-widthImage / 2, -heightImage / 2);
+					}
 
-						if (hasStroke) {
-							newCtx.strokeText(line, 0, 0);
-						}
+				}
 
-						var DEBUG = false;
+				if (widthImage > 0 && heightImage > 0 && bounds.height > 0) {
+					var metrics = ctx.measureText(line);
+					let boundingBoxLeft = metrics.actualBoundingBoxLeft;
+					if (ctx.textAlign == "center") {
+						const halfWidth = metrics.width / 2;
+						boundingBoxLeft = halfWidth;
+						newCtx.translate(halfWidth, 0);
+					}
+					newCtx.drawImage(this._textureFill, 0, 0, widthImage, heightImage);
+					// newCtx is bigger then the main, so to avoid a double scaling
 
-						if (DEBUG) {
-							document.body.append(newCtx.canvas);
-							newCtx.canvas.style.position = 'fixed';
-							newCtx.canvas.style.left = '0px';
-							newCtx.canvas.style.top = '0px';
-							newCtx.canvas.style.zIndex = '1000';
-							CanvasProvider.release(newCtx);
-						}
+					ctx.translate(-boundingBoxLeft, -bounds.height);
+					// we need to scale it down the main ctx for a moment.
+					ctx.scale(1 / scaling, 1 / scaling);
+					ctx.drawImage(newCtx.canvas, 0, 0);
+					ctx.scale(scaling, scaling);
+					ctx.translate(0, bounds.height);
+
+					if (hasStroke) {
+						newCtx.strokeText(line, 0, 0);
+					}
+
+					var DEBUG = false;
+
+					if (DEBUG) {
+						document.body.append(newCtx.canvas);
+						newCtx.canvas.style.position = 'fixed';
+						newCtx.canvas.style.left = '0px';
+						newCtx.canvas.style.top = '0px';
+						newCtx.canvas.style.zIndex = '1000';
+						CanvasProvider.release(newCtx);
 					}
 				}
 			}
