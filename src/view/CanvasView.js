@@ -40,7 +40,7 @@ var CanvasView = View.extend(
                 if (size.isZero())
                     throw new Error(
                         "Cannot create CanvasView with the provided argument: " +
-                            Base.slice(arguments, 1)
+                        Base.slice(arguments, 1)
                     );
                 canvas = CanvasProvider.getCanvas(size);
             }
@@ -128,9 +128,26 @@ var CanvasView = View.extend(
             // Measure the real width of the text. Unfortunately, there is no sane
             // way to measure text height with canvas.
             for (var i = 0, l = lines.length; i < l; i++) {
-                // var measure = ctx.measureText(lines[i]);
-                // width = Math.max(width, measure.actualBoundingBoxRight + measure.actualBoundingBoxLeft);
-                width = Math.max(width, ctx.measureText(lines[i]).width);
+                var measure = ctx.measureText(lines[i]);
+                var lineWidth = measure.width;
+                if (lineWidth > width) width = lineWidth;
+            }
+            ctx.font = prevFont;
+            return width;
+        },
+
+        getActualTextWidth: function (font, lines) {
+            var ctx = this._context,
+                prevFont = ctx.font,
+                width = 0;
+            ctx.font = font;
+            // Measure the real width of the text. Unfortunately, there is no sane
+            // way to measure text height with canvas.
+            for (var i = 0, l = lines.length; i < l; i++) {
+
+                var measure = ctx.measureText(lines[i]);
+                var lineWidth = measure.actualBoundingBoxRight + measure.actualBoundingBoxLeft;
+                if (lineWidth > width) width = lineWidth;
             }
             ctx.font = prevFont;
             return width;

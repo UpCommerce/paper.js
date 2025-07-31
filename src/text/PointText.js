@@ -105,7 +105,7 @@ var PointText = TextItem.extend(/** @lends PointText# */{
 				}
 			} else if (this.data.textureFillStrokedText) {
 				// Draw a stroke with the text shape as hole
-				var bounds = this._getBounds();
+				var bounds = this._getBounds(null, { actualText: true });
 				const textWidth = bounds.width;
 				var scaling = Math.max(5, textWidth / 50); // GEneric good quality for the rendering
 				var canvasWidth = Math.round(textWidth * scaling);
@@ -146,9 +146,11 @@ var PointText = TextItem.extend(/** @lends PointText# */{
 				ctx.translate(0, bounds.height);
 
 			} else {
-				var bounds = this._getBounds();
+
+				var metrics = ctx.measureText(line);
+				var bounds = this._getBounds(null, { actualText: true });
 				const textWidth = bounds.width;
-				var scaling = Math.max(5, textWidth / 50); // GEneric good quality for the rendering
+				var scaling = Math.max(5, textWidth / 50); // Generic good quality for the rendering
 				var canvasWidth = Math.round(textWidth * scaling);
 				var canvasHeight = Math.round(bounds.height * scaling * 1.5);
 
@@ -250,7 +252,6 @@ var PointText = TextItem.extend(/** @lends PointText# */{
 				}
 
 				if (widthImage > 0 && heightImage > 0 && bounds.height > 0) {
-					var metrics = ctx.measureText(line);
 					let boundingBoxLeft = metrics.actualBoundingBoxLeft;
 					if (ctx.textAlign == "center") {
 						const halfWidth = metrics.width / 2;
@@ -294,7 +295,7 @@ var PointText = TextItem.extend(/** @lends PointText# */{
 			numLines = lines.length,
 			justification = style.getJustification(),
 			leading = style.getLeading(),
-			width = this.getView().getTextWidth(style.getFontStyle(), lines),
+			width = options && options.actualText ? this.getView().getActualTextWidth(style.getFontStyle(), lines) : this.getView().getTextWidth(style.getFontStyle(), lines),
 		//baseLine = this.getView().getBaseLine(style.getFontStyle(), lines),
 		//height = this.getView().getTextHeight(style.getFontStyle(), lines),
 			x = 0;
