@@ -100,6 +100,8 @@ var CompoundPath = PathItem.extend(/** @lends CompoundPath# */{
         // CompoundPath has children and supports named children.
         this._children = [];
         this._namedChildren = {};
+        this._textureFill = null;
+        this._textureOptions = null;
         if (!this._initialize(arg)) {
             if (typeof arg === 'string') {
                 this.setPathData(arg);
@@ -107,6 +109,72 @@ var CompoundPath = PathItem.extend(/** @lends CompoundPath# */{
                 this.addChildren(Array.isArray(arg) ? arg : arguments);
             }
         }
+    },
+
+    getTextureFill: function () {
+        return this._textureFill ? this._textureFill.src : null;
+    },
+
+    setTextureFill: function (url) {
+        var that = this;
+
+        if (!url && that._textureFill) {
+            that._loaded = true;
+            that._textureFill = null;
+            this._changed(/*#=*/Change.STYLE);
+        }
+
+        if (url) {
+            function emit(event) {
+                var view = that.getView(),
+                    type = event && event.type || 'load';
+                if (view && that.responds(type)) {
+                    paper = view._scope;
+                    that.emit(type, new Event(event));
+                }
+            }
+
+            // Check if image is already cached
+            var cachedImage = ImageCache.get(url);
+            if (cachedImage) {
+                that._loaded = true;
+                that._textureFill = cachedImage;
+                that._changed(/*#=*/Change.STYLE);
+                // Emit load event for cached image
+                emit({ type: 'load' });
+                return;
+            }
+
+            var image = new self.Image();
+            image.crossOrigin = 'anonymous';
+            image.src = url;
+
+            that._loaded = (image && image.src && image.complete);
+
+            // Trigger the load event on the image once it's loaded
+            DomEvent.add(image, {
+                load: function (event) {
+                    that._loaded = true;
+                    that._textureFill = image;
+                    // Cache the loaded image
+                    ImageCache.set(url, image);
+                    that._changed(/*#=*/Change.STYLE);
+                    emit(event);
+                },
+                error: emit
+            });
+
+            this._changed(/*#=*/Change.STYLE);
+        }
+    },
+
+    getTextureOptions: function () {
+        return this._textureOptions;
+    },
+
+    setTextureOptions: function (textureOptions) {
+        this._textureOptions = textureOptions;
+        this._changed(/*#=*/Change.STYLE);
     },
 
     insertChildren: function insertChildren(index, items) {
@@ -307,10 +375,11 @@ var CompoundPath = PathItem.extend(/** @lends CompoundPath# */{
 
         param = param.extend({ dontStart: true, dontFinish: true });
         ctx.beginPath();
-        for (var i = 0, l = children.length; i < l; i++)
+        for (var i = 0, l = children.length; i < l; i++){
             children[i].draw(ctx, param, strokeMatrix);
+        }
 
-        if (!param.clip) {
+        if (!param.clip && !this._textureFill) {
             this._setStyles(ctx, param, viewMatrix);
             var style = this._style;
             if (style.hasFill()) {
@@ -320,6 +389,132 @@ var CompoundPath = PathItem.extend(/** @lends CompoundPath# */{
             if (style.hasStroke())
                 ctx.stroke();
         }
+
+        if(this._textureFill){
+			var bounds = this.bounds;
+			const textWidth = bounds.width;
+			var scaling = Math.max(5, textWidth / 50);
+            
+			var canvasWidth = Math.round(textWidth * scaling);
+			var canvasHeight = Math.round(bounds.height * scaling * 1.5);
+
+			if (canvasWidth <= 0 || canvasHeight <= 0) {
+				return;
+			}
+            // canvasWidth e canvasHeight creano problemi di performance
+            // (va a scatti)
+            // 100 valore arbitrario per fare spazio allo stroke (va cambiato)
+			canvasWidth = bounds.width + 100;
+			canvasHeight = bounds.height + 100;
+			var newCtx = CanvasProvider.getContext(canvasWidth, canvasHeight);
+
+			this._setStyles(newCtx, param, viewMatrix);
+
+			let myTest = () => {
+				return false;
+			}
+			var DEBUG = myTest();
+
+			if (DEBUG) {
+				document.body.append(newCtx.canvas);
+				newCtx.canvas.style.position = 'fixed';
+				newCtx.canvas.style.left = '0px';
+				newCtx.canvas.style.top = '0px';
+				newCtx.canvas.style.zIndex = '1000';
+
+				CanvasProvider.release(newCtx);
+			}
+
+			var style = this._style;
+			newCtx.shadowColor = null;
+			newCtx.font = ctx.font;
+
+			const positionX = canvasWidth/2 - bounds.center.x;
+			const positionY = canvasHeight/2 - bounds.center.y;
+
+			newCtx.translate(positionX, positionY);
+
+			for (var i = 0, l = children.length; i < l; i++){
+				const child = children[i];
+				child.draw(newCtx, param, strokeMatrix);
+			}
+			var imageRatio = this._textureFill.width / this._textureFill.height;
+
+			if (style.hasFill()) {
+				newCtx.fill(style.getFillRule());
+				newCtx.shadowColor = 'rgba(0,0,0,0)';
+			}
+
+
+			newCtx.globalCompositeOperation = "source-in";
+			const imagePositionX = -bounds.width/2 + bounds.center.x;
+			const imagePositionY = -bounds.height/2 + bounds.center.y;
+			newCtx.translate(imagePositionX,imagePositionY);
+
+			let leftImage = 0;
+			let topImage = 0;
+			let widthImage = textWidth;
+			let heightImage = textWidth / imageRatio;
+
+			if (bounds.height > bounds.width) {
+				heightImage = bounds.height;
+				widthImage = bounds.height * imageRatio;
+			}
+
+			if (this._textureOptions && widthImage > 0 && heightImage > 0) {
+				if (this._textureOptions.syncRatio) {
+					if (this._textureOptions.hasOwnProperty("scaling")) {
+						widthImage *= this._textureOptions.scaling;
+						heightImage *= this._textureOptions.scaling;
+					}
+				} else {
+					if (this._textureOptions.hasOwnProperty("scalingX")) {
+						widthImage *= this._textureOptions.scalingX;
+					}
+					if (this._textureOptions.hasOwnProperty("scalingY")) {
+						heightImage *= this._textureOptions.scalingY;
+					}
+				}
+				if (this._textureOptions.hasOwnProperty("leftPosition")) {
+					leftImage += this._textureOptions.leftPosition;
+				}
+				if (this._textureOptions.hasOwnProperty("topPosition")) {
+					topImage -= this._textureOptions.topPosition;
+				}
+			}
+
+			newCtx.translate(leftImage, topImage);
+
+			if (this._textureOptions && widthImage > 0 && heightImage > 0) {
+
+				if (this._textureOptions.horizontalFlip) {
+					newCtx.translate(widthImage, 0);
+					newCtx.scale(-1, 1);
+				}
+				if (this._textureOptions.verticalFlip) {
+					newCtx.translate(0, heightImage);
+					newCtx.scale(1, -1);
+				}
+				if (this._textureOptions.hasOwnProperty("rotation")) {
+					newCtx.translate(widthImage / 2, heightImage / 2);
+					var radiants = (this._textureOptions.rotation * Math.PI) / 180;
+					newCtx.rotate(radiants);
+					newCtx.translate(-widthImage / 2, -heightImage / 2);
+				}
+			}
+
+			if (widthImage > 0 && heightImage > 0 && bounds.height > 0) {
+				newCtx.drawImage(this._textureFill, 0, 0, widthImage, heightImage);
+			}
+
+			newCtx.globalCompositeOperation = "source-over";
+
+			if (style.hasStroke()){
+				newCtx.stroke();
+			}
+
+			ctx.drawImage(newCtx.canvas, -positionX, -positionY);
+		}
     },
 
     _drawSelected: function(ctx, matrix, selectionItems) {
