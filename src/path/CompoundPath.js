@@ -100,8 +100,8 @@ var CompoundPath = PathItem.extend(/** @lends CompoundPath# */{
         // CompoundPath has children and supports named children.
         this._children = [];
         this._namedChildren = {};
-        this._textureFill = null;
-        this._textureOptions = null;
+        this._fillImage = null;
+        this._fillImageSettings = null;
         if (!this._initialize(arg)) {
             if (typeof arg === 'string') {
                 this.setPathData(arg);
@@ -111,16 +111,16 @@ var CompoundPath = PathItem.extend(/** @lends CompoundPath# */{
         }
     },
 
-    getTextureFill: function () {
-        return this._textureFill ? this._textureFill.src : null;
+    getFillImage: function () {
+        return this._fillImage ? this._fillImage.src : null;
     },
 
-    setTextureFill: function (url) {
+    setFillImage: function (url) {
         var that = this;
 
-        if (!url && that._textureFill) {
+        if (!url && that._fillImage) {
             that._loaded = true;
-            that._textureFill = null;
+            that._fillImage = null;
             this._changed(/*#=*/Change.STYLE);
         }
 
@@ -138,7 +138,7 @@ var CompoundPath = PathItem.extend(/** @lends CompoundPath# */{
             var cachedImage = ImageCache.get(url);
             if (cachedImage) {
                 that._loaded = true;
-                that._textureFill = cachedImage;
+                that._fillImage = cachedImage;
                 that._changed(/*#=*/Change.STYLE);
                 // Emit load event for cached image
                 emit({ type: 'load' });
@@ -155,7 +155,7 @@ var CompoundPath = PathItem.extend(/** @lends CompoundPath# */{
             DomEvent.add(image, {
                 load: function (event) {
                     that._loaded = true;
-                    that._textureFill = image;
+                    that._fillImage = image;
                     // Cache the loaded image
                     ImageCache.set(url, image);
                     that._changed(/*#=*/Change.STYLE);
@@ -168,12 +168,12 @@ var CompoundPath = PathItem.extend(/** @lends CompoundPath# */{
         }
     },
 
-    getTextureOptions: function () {
-        return this._textureOptions;
+    getFillImageSettings: function () {
+        return this._fillImageSettings;
     },
 
-    setTextureOptions: function (textureOptions) {
-        this._textureOptions = textureOptions;
+    setFillImageSettings: function (textureOptions) {
+        this._fillImageSettings = textureOptions;
         this._changed(/*#=*/Change.STYLE);
     },
 
@@ -379,7 +379,7 @@ var CompoundPath = PathItem.extend(/** @lends CompoundPath# */{
             children[i].draw(ctx, param, strokeMatrix);
         }
 
-        if (!param.clip && !this._textureFill) {
+        if (!param.clip && !this._fillImage) {
             this._setStyles(ctx, param, viewMatrix);
             var style = this._style;
             if (style.hasFill()) {
@@ -390,7 +390,7 @@ var CompoundPath = PathItem.extend(/** @lends CompoundPath# */{
                 ctx.stroke();
         }
 
-        if(this._textureFill){
+        if(this._fillImage){
 			var bounds = this.bounds;
 			const textWidth = bounds.width;
 			var scaling = Math.max(5, textWidth / 50);
@@ -438,7 +438,7 @@ var CompoundPath = PathItem.extend(/** @lends CompoundPath# */{
 				const child = children[i];
 				child.draw(newCtx, param, strokeMatrix);
 			}
-			var imageRatio = this._textureFill.width / this._textureFill.height;
+			var imageRatio = this._fillImage.width / this._fillImage.height;
 
 			if (style.hasFill()) {
 				newCtx.fill(style.getFillRule());
@@ -461,50 +461,50 @@ var CompoundPath = PathItem.extend(/** @lends CompoundPath# */{
 				widthImage = bounds.height * imageRatio;
 			}
 
-			if (this._textureOptions && widthImage > 0 && heightImage > 0) {
-				if (this._textureOptions.syncRatio) {
-					if (this._textureOptions.hasOwnProperty("scaling")) {
-						widthImage *= this._textureOptions.scaling;
-						heightImage *= this._textureOptions.scaling;
+			if (this._fillImageSettings && widthImage > 0 && heightImage > 0) {
+				if (this._fillImageSettings.syncRatio) {
+					if (this._fillImageSettings.hasOwnProperty("scaling")) {
+						widthImage *= this._fillImageSettings.scaling;
+						heightImage *= this._fillImageSettings.scaling;
 					}
 				} else {
-					if (this._textureOptions.hasOwnProperty("scalingX")) {
-						widthImage *= this._textureOptions.scalingX;
+					if (this._fillImageSettings.hasOwnProperty("scalingX")) {
+						widthImage *= this._fillImageSettings.scalingX;
 					}
-					if (this._textureOptions.hasOwnProperty("scalingY")) {
-						heightImage *= this._textureOptions.scalingY;
+					if (this._fillImageSettings.hasOwnProperty("scalingY")) {
+						heightImage *= this._fillImageSettings.scalingY;
 					}
 				}
-				if (this._textureOptions.hasOwnProperty("leftPosition")) {
-					leftImage += this._textureOptions.leftPosition;
+				if (this._fillImageSettings.hasOwnProperty("leftPosition")) {
+					leftImage += this._fillImageSettings.leftPosition;
 				}
-				if (this._textureOptions.hasOwnProperty("topPosition")) {
-					topImage -= this._textureOptions.topPosition;
+				if (this._fillImageSettings.hasOwnProperty("topPosition")) {
+					topImage -= this._fillImageSettings.topPosition;
 				}
 			}
 
 			newCtx.translate(leftImage, topImage);
 
-			if (this._textureOptions && widthImage > 0 && heightImage > 0) {
+			if (this._fillImageSettings && widthImage > 0 && heightImage > 0) {
 
-				if (this._textureOptions.horizontalFlip) {
+				if (this._fillImageSettings.horizontalFlip) {
 					newCtx.translate(widthImage, 0);
 					newCtx.scale(-1, 1);
 				}
-				if (this._textureOptions.verticalFlip) {
+				if (this._fillImageSettings.verticalFlip) {
 					newCtx.translate(0, heightImage);
 					newCtx.scale(1, -1);
 				}
-				if (this._textureOptions.hasOwnProperty("rotation")) {
+				if (this._fillImageSettings.hasOwnProperty("rotation")) {
 					newCtx.translate(widthImage / 2, heightImage / 2);
-					var radiants = (this._textureOptions.rotation * Math.PI) / 180;
+					var radiants = (this._fillImageSettings.rotation * Math.PI) / 180;
 					newCtx.rotate(radiants);
 					newCtx.translate(-widthImage / 2, -heightImage / 2);
 				}
 			}
 
 			if (widthImage > 0 && heightImage > 0 && bounds.height > 0) {
-				newCtx.drawImage(this._textureFill, 0, 0, widthImage, heightImage);
+				newCtx.drawImage(this._fillImage, 0, 0, widthImage, heightImage);
 			}
 
 			newCtx.globalCompositeOperation = "source-over";
