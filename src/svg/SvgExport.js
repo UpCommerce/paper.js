@@ -199,7 +199,7 @@ new function () {
         return SvgElement.create('use', attrs, formatter);
     }
 
-    function exportGradient(color, item) {
+    function exportGradient(color, item, parentItem) {
         // NOTE: As long as the fillTransform attribute is not implemented,
         // we need to create a separate gradient object for each gradient,
         // even when they share the same gradient definition.
@@ -207,31 +207,24 @@ new function () {
         // TODO: Implement gradient merging in SvgImport
         var gradientNode = getDefinition(color, 'color');
         var matrix = (item.data && item.data.originalMatrix) || item._matrix;
-        var bounds = item._getBounds(matrix.inverted(), { cacheItem: item }).rect;
-
-        if (item.data && item.data.originalMatrix) {
-            matrix = item.data.originalMatrix;
-        }
+        var myBounds = item._getBounds(matrix.inverted(), { cacheItem: item }).rect;
 
         if (!gradientNode) {
             var gradient = color.getGradient(),
                 radial = gradient._radial,
-                origin = color.getOrigin(),
-                destination = color.getDestination(),
                 attrs;
-
-
 
             // The origin in the output SVG is different from paper origin.
             // 0,0 here is the center of element, but 0,0 on svg is bottom left
-            var transformedOrigin = item.data.localGradientOrigin;
-            var transformedDestination = item.data.localGradientDestination;
+            var transformedOrigin = item.data.localGradientOrigin ?? parentItem.data.localGradientOrigin;
+            var transformedDestination = item.data.localGradientDestination ?? parentItem.data.localGradientDestination;
             var transformedHighlight = highlight ? matrix._inverseTransform(highlight) : null;
 
             if (radial) {
+                // Radial
                 attrs = {
-                    cx: transformedOrigin.x + bounds.width / 2,
-                    cy: (transformedOrigin.y - bounds.height / 2) / 2,
+                    cx: transformedOrigin.x + myBounds.width / 2,
+                    cy: (transformedOrigin.y - myBounds.height / 2) / 2,
                     r: transformedOrigin.getDistance(transformedDestination)
                 };
                 var highlight = color.getHighlight();
@@ -240,12 +233,32 @@ new function () {
                     attrs.fy = transformedHighlight.y;
                 }
             } else {
-                attrs = {
-                    x1: transformedOrigin.x + bounds.width / 2,
-                    y1: (transformedOrigin.y - bounds.height / 2) / 2,
-                    x2: transformedDestination.x + bounds.width / 2,
-                    y2: (transformedDestination.y - bounds.height / 2) / 2
-                };
+                // Linear
+                if (parentItem && parentItem.data.isTextOnPath) {
+                    var parentBounds = parentItem ? parentItem.bounds : null;
+
+                    var newOriginX = transformedOrigin.x + parentBounds.x;
+                    var newOriginY = transformedOrigin.y + parentBounds.y;
+                    var newOrigin = item.globalToLocal([newOriginX, newOriginY]);
+
+                    var newDestinationX = transformedDestination.x + parentBounds.x;
+                    var newDestinationY = transformedDestination.y + parentBounds.y;
+                    var newDestination = item.globalToLocal([newDestinationX, newDestinationY]);
+
+                    attrs = {
+                        x1: newOrigin.x,
+                        y1: newOrigin.y,
+                        x2: newDestination.x,
+                        y2: newDestination.y
+                    };
+                } else {
+                    attrs = {
+                        x1: transformedOrigin.x + myBounds.width / 2,
+                        y1: (transformedOrigin.y - myBounds.height / 2) / 2,
+                        x2: transformedDestination.x + myBounds.width / 2,
+                        y2: (transformedDestination.y - myBounds.height / 2) / 2
+                    };
+                }
             }
 
             attrs.gradientUnits = 'userSpaceOnUse';
@@ -282,14 +295,20 @@ new function () {
                 formatter);
             node.textContent = item._content;
             return node;
-        } else if (hasGradients) {
+        } else if (hasGradients && item.fillColor && item.fillColor.gradient) {
             var attrs = getTransform(item._matrix, false),
                 group = SvgElement.create('g', attrs, formatter)
 
-            var node = SvgElement.create('text', null,
-                formatter);
-
+            var node = SvgElement.create('text', null, formatter);
             node.textContent = item._content;
+
+            // For text on path we need to apply a specific gradient filter
+            // for each single letter to make it "fixed" in the view space.
+            if (item.parent && item.parent.data && item.parent.data.isTextOnPath) {
+                // Handle both simple texts and point text with parent item
+                var gradientNode = exportGradient(item.fillColor, item, item.parent);
+                node.setAttribute('fill', gradientNode);
+            }
 
             group.appendChild(node);
             return group;
