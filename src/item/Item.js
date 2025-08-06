@@ -841,6 +841,7 @@ var Item = Base.extend(Emitter, /** @lends Item# */{
     getHandleBounds: { handle: true },
     getInternalBounds: { internal: true },
     getActualTextBounds: { actualText: true },
+    getStrokeActualTextBounds: { stroke: true, actualText: true },
 },
     function (options, key) {
         this[key] = function (matrix) {
