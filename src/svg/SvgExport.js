@@ -221,16 +221,34 @@ new function () {
             var transformedHighlight = highlight ? matrix._inverseTransform(highlight) : null;
 
             if (radial) {
-                // Radial
-                attrs = {
-                    cx: transformedOrigin.x + myBounds.width / 2,
-                    cy: (transformedOrigin.y - myBounds.height / 2) / 2,
-                    r: transformedOrigin.getDistance(transformedDestination)
-                };
-                var highlight = color.getHighlight();
-                if (highlight) {
-                    attrs.fx = transformedHighlight.x;
-                    attrs.fy = transformedHighlight.y;
+                if (parentItem && parentItem.data.isTextOnPath) {
+                    var parentBounds = parentItem ? parentItem.bounds : null;
+
+                    var newOriginX = transformedOrigin.x + parentBounds.x;
+                    var newOriginY = transformedOrigin.y + parentBounds.y;
+                    var newOrigin = item.globalToLocal([newOriginX, newOriginY]);
+
+                    var newDestinationX = transformedDestination.x + parentBounds.x;
+                    var newDestinationY = transformedDestination.y + parentBounds.y;
+                    var newDestination = item.globalToLocal([newDestinationX, newDestinationY]);
+
+                    attrs = {
+                        cx: newOrigin.x,
+                        cy: (newOrigin.y - myBounds.height / 2) / 2,
+                        r: newOrigin.getDistance(newDestination)
+                    };
+                } else {
+                    // Radial
+                    attrs = {
+                        cx: transformedOrigin.x + myBounds.width / 2,
+                        cy: (transformedOrigin.y - myBounds.height / 2) / 2,
+                        r: transformedOrigin.getDistance(transformedDestination)
+                    };
+                    var highlight = color.getHighlight();
+                    if (highlight) {
+                        attrs.fx = transformedHighlight.x;
+                        attrs.fy = transformedHighlight.y;
+                    }
                 }
             } else {
                 // Linear
