@@ -101,6 +101,7 @@ var CompoundPath = PathItem.extend(/** @lends CompoundPath# */{
         this._children = [];
         this._namedChildren = {};
         this._fillImage = null;
+        this._loaded = false;
         this._fillImageSettings = null;
         if (!this._initialize(arg)) {
             if (typeof arg === 'string') {
@@ -109,6 +110,14 @@ var CompoundPath = PathItem.extend(/** @lends CompoundPath# */{
                 this.addChildren(Array.isArray(arg) ? arg : arguments);
             }
         }
+    },
+
+    getLoaded: function () {
+        return this._loaded;
+    },
+
+    setLoaded: function (loaded) {
+        this._loaded = loaded;
     },
 
     getFillImage: function () {
