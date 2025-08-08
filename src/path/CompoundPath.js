@@ -28,7 +28,9 @@
 var CompoundPath = PathItem.extend(/** @lends CompoundPath# */{
     _class: 'CompoundPath',
     _serializeFields: {
-        children: []
+        children: [],
+        fillImage: null,
+        fillImageSettings:null,
     },
     // Enforce creation of beans, as bean getters have hidden parameters.
     // See #getPathData() below.
