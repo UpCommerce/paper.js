@@ -170,12 +170,146 @@ new function () {
     }
 
     function exportCompoundPath(item, options) {
-        var attrs = getTransform(item._matrix);
-        var data = item.getPathData(null, options.precision);
-        if (data)
-            attrs.d = data;
-        return SvgElement.create('path', attrs, formatter);
-    }
+		if(!item._fillImage){
+			var attrs = getTransform(item._matrix);
+			var data = item.getPathData(null, options.precision);
+			if (data)
+				attrs.d = data;
+			const path = SvgElement.create('path', attrs, formatter);
+			return path;
+		}
+		if(item._fillImage){
+			var attrs = getTransform(item._matrix);
+			const group = SvgElement.create('g', attrs, formatter);
+			var data = item.getPathData(null, options.precision);
+			if (data)
+				attrs.d = data;
+
+			const path = SvgElement.create('path', attrs, formatter);
+
+			group.appendChild(path);
+
+			const fillImageSettings = item._fillImageSettings;
+
+			 var bounds = item.bounds;
+
+            var imageRatio = item._fillImage.naturalWidth / item._fillImage.naturalHeight;
+
+            // Calculate image dimensions and positioning
+            var leftImage = 0;
+            var topImage = 0;
+            var widthImage = bounds.width;
+            var heightImage = bounds.width / imageRatio;
+
+            if (bounds.height > bounds.width) {
+                heightImage = bounds.height;
+                widthImage = bounds.height * imageRatio;
+            }
+
+			heightImage = Math.round(heightImage);
+			widthImage = Math.round(widthImage);
+
+            if (fillImageSettings && widthImage > 0 && heightImage > 0) {
+                var hasTextWidth = fillImageSettings.hasOwnProperty("textWidth");
+                var hasTextHeight = fillImageSettings.hasOwnProperty("textHeight");
+
+                if (hasTextWidth) {
+                    widthImage = Math.round(fillImageSettings.textWidth);
+                    heightImage = Math.round(widthImage / imageRatio);
+                }
+
+                if (hasTextWidth && hasTextHeight && fillImageSettings.textHeight > fillImageSettings.textWidth) {
+                    heightImage = Math.round(fillImageSettings.textHeight);
+                    widthImage = Math.round(fillImageSettings.textHeight * imageRatio);
+                }
+
+                if (fillImageSettings.hasOwnProperty("offsetLeft")) {
+                    leftImage = -fillImageSettings.offsetLeft;
+                }
+                if (fillImageSettings.hasOwnProperty("offsetTop")) {
+                    topImage = -fillImageSettings.offsetTop;
+                }
+
+                if (fillImageSettings.syncRatio) {
+                    if (fillImageSettings.hasOwnProperty("scaling")) {
+                        widthImage *= fillImageSettings.scaling;
+                        heightImage *= fillImageSettings.scaling;
+                    }
+                } else {
+                    if (fillImageSettings.hasOwnProperty("scalingX")) {
+                        widthImage *= fillImageSettings.scalingX;
+                    }
+                    if (fillImageSettings.hasOwnProperty("scalingY")) {
+                        heightImage *= fillImageSettings.scalingY;
+                    }
+                }
+
+                if (fillImageSettings.hasOwnProperty("leftPosition")) {
+                    leftImage += fillImageSettings.leftPosition;
+                }
+                if (fillImageSettings.hasOwnProperty("topPosition")) {
+                    topImage -= fillImageSettings.topPosition;
+                }
+            }
+
+            // First add the fillImage image in def
+            var image = SvgElement.create('image');
+            image.setAttribute('href', item._fillImage.src);
+            image.setAttribute('width', widthImage + 'px');
+            image.setAttribute('height', heightImage + 'px');
+
+            setDefinition(item, image, 'image');
+
+			var filter = SvgElement.create('filter');
+
+            var feImage = SvgElement.create('feImage', {
+                href: '#' + image.id,
+                x: (bounds.x + leftImage) + 'px',
+                y: (bounds.y + topImage) + 'px',
+                width: widthImage + 'px',
+                height: heightImage + 'px'
+            }, formatter);
+
+			// Handle transformations
+            if (fillImageSettings && widthImage > 0 && heightImage > 0) {
+                var transforms = [];
+
+                if (fillImageSettings.horizontalFlip || fillImageSettings.verticalFlip) {
+                    var scaleX = fillImageSettings.horizontalFlip ? -1 : 1;
+                    var scaleY = fillImageSettings.verticalFlip ? -1 : 1;
+                    var translateX = fillImageSettings.horizontalFlip ? widthImage : 0;
+                    var translateY = fillImageSettings.verticalFlip ? heightImage : 0;
+                    transforms.push('translate(' + translateX + ',' + translateY + ')');
+                    transforms.push('scale(' + scaleX + ',' + scaleY + ')');
+                }
+
+                if (fillImageSettings.hasOwnProperty("rotation")) {
+                    var centerX = widthImage / 2;
+                    var centerY = heightImage / 2;
+                    transforms.push('translate(' + centerX + ',' + centerY + ')');
+                    transforms.push('rotate(' + fillImageSettings.rotation + ')');
+                    transforms.push('translate(' + (-centerX) + ',' + (-centerY) + ')');
+                }
+
+                if (transforms.length > 0) {
+                    image.setAttribute('transform', transforms.join(' '));
+                }
+            }
+
+            var feComposite = SvgElement.create('feComposite', {
+                in2: 'SourceGraphic',
+                operator: 'atop'
+            }, formatter);
+
+            filter.appendChild(feImage);
+            filter.appendChild(feComposite);
+
+            setDefinition(item, filter, 'filter');
+            group.setAttribute("filter", 'url(#' + filter.id + ') ');
+
+			return group;
+		}
+	}
 
     function exportSymbolItem(item, options) {
         var attrs = getTransform(item._matrix, true),
