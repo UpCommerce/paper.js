@@ -298,7 +298,7 @@ new function () {
 
             var feComposite = SvgElement.create('feComposite', {
                 in2: 'SourceGraphic',
-                operator: 'atop'
+                operator: 'in'
             }, formatter);
 
             filter.appendChild(feImage);
@@ -587,7 +587,7 @@ new function () {
 
             var feComposite = SvgElement.create('feComposite', {
                 in2: 'SourceGraphic',
-                operator: 'atop'
+                operator: 'in'
             }, formatter);
 
             filter.appendChild(feImage);
