@@ -9,7 +9,7 @@
  *
  * All rights reserved.
  *
- * Date: Tue Jul 29 19:43:33 2025 +0200
+ * Date: Mon Aug 11 17:16:28 2025 +0200
  *
  ***
  *
@@ -3173,28 +3173,28 @@ var Item = Base.extend(Emitter, {
 	},
 	_prioritize: ['applyMatrix']
 },
-new function() {
-	var handlers = ['onMouseDown', 'onMouseUp', 'onMouseDrag', 'onClick',
+	new function () {
+		var handlers = ['onMouseDown', 'onMouseUp', 'onMouseDrag', 'onClick',
 			'onDoubleClick', 'onMouseMove', 'onMouseEnter', 'onMouseLeave'];
-	return Base.each(handlers,
-		function(name) {
-			this._events[name] = {
-				install: function(type) {
-					this.getView()._countItemEvent(type, 1);
-				},
+		return Base.each(handlers,
+			function (name) {
+				this._events[name] = {
+					install: function (type) {
+						this.getView()._countItemEvent(type, 1);
+					},
 
-				uninstall: function(type) {
-					this.getView()._countItemEvent(type, -1);
-				}
-			};
-		}, {
+					uninstall: function (type) {
+						this.getView()._countItemEvent(type, -1);
+					}
+				};
+			}, {
 			_events: {
 				onFrame: {
-					install: function() {
+					install: function () {
 						this.getView()._animateItem(this, true);
 					},
 
-					uninstall: function() {
+					uninstall: function () {
 						this.getView()._animateItem(this, false);
 					}
 				},
@@ -3206,12 +3206,12 @@ new function() {
 				_itemHandlers: handlers
 			}
 		}
-	);
-}, {
+		);
+	}, {
 	initialize: function Item() {
 	},
 
-	_initialize: function(props, point) {
+		_initialize: function (props, point) {
 		var hasProps = props && Base.isPlainObject(props),
 			internal = hasProps && props.internal === true,
 			matrix = this._matrix = new Matrix(),
@@ -3229,7 +3229,7 @@ new function() {
 			this._setProject(project);
 		} else {
 			(hasProps && props.parent || project)
-					._insertItem(undefined, this, true);
+				._insertItem(undefined, this, true);
 		}
 		if (hasProps && props !== Item.NO_INSERT && props !== Item.INSERT) {
 			this.set(props, {
@@ -3239,7 +3239,7 @@ new function() {
 		return hasProps;
 	},
 
-	_serialize: function(options, dictionary) {
+		_serialize: function (options, dictionary) {
 		var props = {},
 			that = this;
 
@@ -3247,9 +3247,9 @@ new function() {
 			for (var key in fields) {
 				var value = that[key];
 				if (!Base.equals(value, key === 'leading'
-						? fields.fontSize * 1.2 : fields[key])) {
+					? fields.fontSize * 1.2 : fields[key])) {
 					props[key] = Base.serialize(value, options,
-							key !== 'data', dictionary);
+						key !== 'data', dictionary);
 				}
 			}
 		}
@@ -3257,10 +3257,10 @@ new function() {
 		serialize(this._serializeFields);
 		if (!(this instanceof Group))
 			serialize(this._style._defaults);
-		return [ this._class, props ];
+			return [this._class, props];
 	},
 
-	_changed: function(flags) {
+		_changed: function (flags) {
 		var symbol = this._symbol,
 			cacheParent = this._parent || symbol,
 			project = this._project;
@@ -3271,7 +3271,7 @@ new function() {
 			this._globalMatrix = undefined;
 		}
 		if (cacheParent
-				&& (flags & 72)) {
+			&& (flags & 72)) {
 			Item._clearBoundsCache(cacheParent);
 		}
 		if (flags & 2) {
@@ -3283,21 +3283,21 @@ new function() {
 			symbol._changed(flags);
 	},
 
-	getId: function() {
+		getId: function () {
 		return this._id;
 	},
 
-	getName: function() {
+		getName: function () {
 		return this._name;
 	},
 
-	setName: function(name) {
+		setName: function (name) {
 
 		if (this._name)
 			this._removeNamed();
 		if (name === (+name) + '')
 			throw new Error(
-					'Names consisting only of numbers are not supported.');
+				'Names consisting only of numbers are not supported.');
 		var owner = this._getOwner();
 		if (name && owner) {
 			var children = owner._children,
@@ -3310,39 +3310,39 @@ new function() {
 		this._changed(256);
 	},
 
-	getStyle: function() {
+		getStyle: function () {
 		return this._style;
 	},
 
-	setStyle: function(style) {
+		setStyle: function (style) {
 		this.getStyle().set(style);
 	}
 }, Base.each(['locked', 'visible', 'blendMode', 'opacity', 'guide', 'enhanceBlendMode'],
-	function(name) {
+	function (name) {
 		var part = Base.capitalize(name),
 			key = '_' + name,
 			flags = {
 				locked: 256,
 				visible: 265
 			};
-		this['get' + part] = function() {
+		this['get' + part] = function () {
 			return this[key];
 		};
-		this['set' + part] = function(value) {
+		this['set' + part] = function (value) {
 			if (value != this[key]) {
 				this[key] = value;
 				this._changed(flags[name] || 257);
 			}
 		};
 	},
-{}), {
+	{}), {
 	beans: true,
 
-	getSelection: function() {
+		getSelection: function () {
 		return this._selection;
 	},
 
-	setSelection: function(selection) {
+		setSelection: function (selection) {
 		if (selection !== this._selection) {
 			this._selection = selection;
 			var project = this._project;
@@ -3353,12 +3353,12 @@ new function() {
 		}
 	},
 
-	_changeSelection: function(flag, selected) {
+		_changeSelection: function (flag, selected) {
 		var selection = this._selection;
 		this.setSelection(selected ? selection | flag : selection & ~flag);
 	},
 
-	isSelected: function() {
+		isSelected: function () {
 		if (this._selectChildren) {
 			var children = this._children;
 			for (var i = 0, l = children.length; i < l; i++)
@@ -3368,7 +3368,7 @@ new function() {
 		return !!(this._selection & 1);
 	},
 
-	setSelected: function(selected) {
+		setSelected: function (selected) {
 		if (this._selectChildren) {
 			var children = this._children;
 			for (var i = 0, l = children.length; i < l; i++)
@@ -3377,7 +3377,7 @@ new function() {
 		this._changeSelection(1, selected);
 	},
 
-	isFullySelected: function() {
+		isFullySelected: function () {
 		var children = this._children,
 			selected = !!(this._selection & 1);
 		if (children && selected) {
@@ -3389,7 +3389,7 @@ new function() {
 		return selected;
 	},
 
-	setFullySelected: function(selected) {
+		setFullySelected: function (selected) {
 		var children = this._children;
 		if (children) {
 			for (var i = 0, l = children.length; i < l; i++)
@@ -3398,11 +3398,11 @@ new function() {
 		this._changeSelection(1, selected);
 	},
 
-	isClipMask: function() {
+		isClipMask: function () {
 		return this._clipMask;
 	},
 
-	setClipMask: function(clipMask) {
+		setClipMask: function (clipMask) {
 		if (this._clipMask != (clipMask = !!clipMask)) {
 			this._clipMask = clipMask;
 			if (clipMask) {
@@ -3415,58 +3415,60 @@ new function() {
 		}
 	},
 
-	getData: function() {
+		getData: function () {
 		if (!this._data)
 			this._data = {};
 		return this._data;
 	},
 
-	setData: function(data) {
+		setData: function (data) {
 		this._data = data;
 	},
 
-	getPosition: function(_dontLink) {
+		getPosition: function (_dontLink) {
 		var ctor = _dontLink ? Point : LinkedPoint;
 		var position = this._position ||
 			(this._position = this._getPositionFromBounds());
 		return new ctor(position.x, position.y, this, 'setPosition');
 	},
 
-	setPosition: function() {
+		setPosition: function () {
 		this.translate(Point.read(arguments).subtract(this.getPosition(true)));
 	},
 
-	_getPositionFromBounds: function(bounds) {
+		_getPositionFromBounds: function (bounds) {
 		return this._pivot
-				? this._matrix._transformPoint(this._pivot)
-				: (bounds || this.getBounds()).getCenter(true);
+			? this._matrix._transformPoint(this._pivot)
+			: (bounds || this.getBounds()).getCenter(true);
 	},
 
-	getPivot: function() {
+		getPivot: function () {
 		var pivot = this._pivot;
 		return pivot
-				? new LinkedPoint(pivot.x, pivot.y, this, 'setPivot')
-				: null;
+			? new LinkedPoint(pivot.x, pivot.y, this, 'setPivot')
+			: null;
 	},
 
-	setPivot: function() {
+		setPivot: function () {
 		this._pivot = Point.read(arguments, 0, { clone: true, readNull: true });
 		this._position = undefined;
 	}
 }, Base.each({
-		getStrokeBounds: { stroke: true },
-		getHandleBounds: { handle: true },
-		getInternalBounds: { internal: true }
-	},
-	function(options, key) {
-		this[key] = function(matrix) {
+	getStrokeBounds: { stroke: true },
+	getHandleBounds: { handle: true },
+	getInternalBounds: { internal: true },
+	getActualTextBounds: { actualText: true },
+	getStrokeActualTextBounds: { stroke: true, actualText: true },
+},
+	function (options, key) {
+		this[key] = function (matrix) {
 			return this.getBounds(matrix, options);
 		};
 	},
 {
 	beans: true,
 
-	getBounds: function(matrix, options) {
+	getBounds: function (matrix, options) {
 		var hasMatrix = options || matrix instanceof Matrix,
 			opts = Base.set({}, hasMatrix ? options : matrix,
 					this._boundsOptions);
@@ -3479,7 +3481,7 @@ new function() {
 				: rect;
 	},
 
-	setBounds: function() {
+	setBounds: function () {
 		var rect = Rectangle.read(arguments),
 			bounds = this.getBounds(),
 			_matrix = this._matrix,
@@ -3501,7 +3503,7 @@ new function() {
 		this.transform(matrix);
 	},
 
-	_getBounds: function(matrix, options) {
+	_getBounds: function (matrix, options) {
 		var children = this._children;
 		if (!children || !children.length)
 			return new Rectangle();
@@ -3509,15 +3511,16 @@ new function() {
 		return Item._getBounds(children, matrix, options);
 	},
 
-	_getBoundsCacheKey: function(options, internal) {
+	_getBoundsCacheKey: function (options, internal) {
 		return [
 			options.stroke ? 1 : 0,
 			options.handle ? 1 : 0,
-			internal ? 1 : 0
+			internal ? 1 : 0,
+			options.actualText ? 1 : 0,
 		].join('');
 	},
 
-	_getCachedBounds: function(matrix, options, noInternal) {
+	_getCachedBounds: function (matrix, options, noInternal) {
 		matrix = matrix && matrix._orNullIfIdentity();
 		var internal = options.internal && !noInternal,
 			cacheItem = options.cacheItem,
@@ -3554,7 +3557,7 @@ new function() {
 		};
 	},
 
-	_getStrokeMatrix: function(matrix, options) {
+	_getStrokeMatrix: function (matrix, options) {
 		var parent = this.getStrokeScaling() ? null
 				: options && options.internal ? this
 					: this._parent || this._symbol && this._symbol._item,
@@ -3563,7 +3566,7 @@ new function() {
 	},
 
 	statics: {
-		_updateBoundsCache: function(parent, item) {
+		_updateBoundsCache: function (parent, item) {
 			if (parent && item) {
 				var id = item._id,
 					ref = parent._boundsCache = parent._boundsCache || {
@@ -3577,11 +3580,11 @@ new function() {
 			}
 		},
 
-		_clearBoundsCache: function(item) {
+		_clearBoundsCache: function (item) {
 			var cache = item._boundsCache;
 			if (cache) {
 				item._bounds = item._position = item._boundsCache = undefined;
-				for (var i = 0, list = cache.list, l = list.length; i < l; i++){
+				for (var i = 0, list = cache.list, l = list.length; i < l; i++) {
 					var other = list[i];
 					if (other !== item) {
 						other._bounds = other._position = undefined;
@@ -3592,7 +3595,7 @@ new function() {
 			}
 		},
 
-		_getBounds: function(items, matrix, options) {
+		_getBounds: function (items, matrix, options) {
 			var x1 = Infinity,
 				x2 = -x1,
 				y1 = x1,
@@ -3622,21 +3625,21 @@ new function() {
 		}
 	}
 
-}), {
+	}), {
 	beans: true,
 
-	_decompose: function() {
+		_decompose: function () {
 		return this._applyMatrix
 			? null
 			: this._decomposed || (this._decomposed = this._matrix.decompose());
 	},
 
-	getRotation: function() {
+		getRotation: function () {
 		var decomposed = this._decompose();
 		return decomposed ? decomposed.rotation : 0;
 	},
 
-	setRotation: function(rotation) {
+		setRotation: function (rotation) {
 		var current = this.getRotation();
 		if (current != null && rotation != null) {
 			var decomposed = this._decomposed;
@@ -3648,13 +3651,13 @@ new function() {
 		}
 	},
 
-	getScaling: function() {
+		getScaling: function () {
 		var decomposed = this._decompose(),
 			s = decomposed && decomposed.scaling;
 		return new LinkedPoint(s ? s.x : 1, s ? s.y : 1, this, 'setScaling');
 	},
 
-	setScaling: function() {
+		setScaling: function () {
 		var current = this.getScaling(),
 			scaling = Point.read(arguments, 0, { clone: true, readNull: true });
 		if (current && scaling && !current.equals(scaling)) {
@@ -3687,16 +3690,16 @@ new function() {
 		}
 	},
 
-	getMatrix: function() {
+		getMatrix: function () {
 		return this._matrix;
 	},
 
-	setMatrix: function() {
+		setMatrix: function () {
 		var matrix = this._matrix;
 		matrix.set.apply(matrix, arguments);
 	},
 
-	getGlobalMatrix: function(_dontClone) {
+		getGlobalMatrix: function (_dontClone) {
 		var matrix = this._globalMatrix;
 		if (matrix) {
 			var parent = this._parent;
@@ -3722,15 +3725,15 @@ new function() {
 		return _dontClone ? matrix : matrix.clone();
 	},
 
-	getViewMatrix: function() {
+		getViewMatrix: function () {
 		return this.getGlobalMatrix().prepend(this.getView()._matrix);
 	},
 
-	getApplyMatrix: function() {
+		getApplyMatrix: function () {
 		return this._applyMatrix;
 	},
 
-	setApplyMatrix: function(apply) {
+		setApplyMatrix: function (apply) {
 		if (this._applyMatrix = this._canApplyMatrix && !!apply)
 			this.transform(null, true);
 	},
@@ -3738,11 +3741,11 @@ new function() {
 	getTransformContent: '#getApplyMatrix',
 	setTransformContent: '#setApplyMatrix',
 }, {
-	getProject: function() {
+		getProject: function () {
 		return this._project;
 	},
 
-	_setProject: function(project, installEvents) {
+		_setProject: function (project, installEvents) {
 		if (this._project !== project) {
 			if (this._project)
 				this._installEvents(false);
@@ -3756,7 +3759,7 @@ new function() {
 			this._installEvents(true);
 	},
 
-	getView: function() {
+		getView: function () {
 		return this._project._view;
 	},
 
@@ -3767,7 +3770,7 @@ new function() {
 			children[i]._installEvents(install);
 	},
 
-	getLayer: function() {
+		getLayer: function () {
 		var parent = this;
 		while (parent = parent._parent) {
 			if (parent instanceof Layer)
@@ -3776,80 +3779,80 @@ new function() {
 		return null;
 	},
 
-	getParent: function() {
+		getParent: function () {
 		return this._parent;
 	},
 
-	setParent: function(item) {
+		setParent: function (item) {
 		return item.addChild(this);
 	},
 
 	_getOwner: '#getParent',
 
-	getChildren: function() {
+		getChildren: function () {
 		return this._children;
 	},
 
-	setChildren: function(items) {
+		setChildren: function (items) {
 		this.removeChildren();
 		this.addChildren(items);
 	},
 
-	getFirstChild: function() {
+		getFirstChild: function () {
 		return this._children && this._children[0] || null;
 	},
 
-	getLastChild: function() {
+		getLastChild: function () {
 		return this._children && this._children[this._children.length - 1]
-				|| null;
+			|| null;
 	},
 
-	getNextSibling: function() {
+		getNextSibling: function () {
 		var owner = this._getOwner();
 		return owner && owner._children[this._index + 1] || null;
 	},
 
-	getPreviousSibling: function() {
+		getPreviousSibling: function () {
 		var owner = this._getOwner();
 		return owner && owner._children[this._index - 1] || null;
 	},
 
-	getIndex: function() {
+		getIndex: function () {
 		return this._index;
 	},
 
-	setIndex: function(index) {
+		setIndex: function (index) {
 		var parent = this._parent,
 			children = parent && parent._children;
 		if (children) {
 			parent.insertChildren(index in children ? index : undefined,
-								  [this]);
+				[this]);
 		}
 	},
 
-	equals: function(item) {
+		equals: function (item) {
 		return item === this || item && this._class === item._class
-				&& this._style.equals(item._style)
-				&& this._matrix.equals(item._matrix)
-				&& this._locked === item._locked
-				&& this._visible === item._visible
-				&& this._blendMode === item._blendMode
-				&& this._opacity === item._opacity
-				&& this._clipMask === item._clipMask
-				&& this._guide === item._guide
-				&& this._equals(item)
-				|| false;
+			&& this._style.equals(item._style)
+			&& this._matrix.equals(item._matrix)
+			&& this._locked === item._locked
+			&& this._visible === item._visible
+			&& this._blendMode === item._blendMode
+			&& this._opacity === item._opacity
+			&& this._clipMask === item._clipMask
+			&& this._guide === item._guide
+			&& this._equals(item)
+			|| false;
 	},
 
-	_equals: function(item) {
+		_equals: function (item) {
 		return Base.equals(this._children, item._children);
 	},
 
-	clone: function(options) {
+		clone: function (options) {
 		var copy = new this.constructor(Item.NO_INSERT),
 			children = this._children,
 			insert = Base.pick(options ? options.insert : undefined,
-					options === undefined || options === true),
+				options === undefined || options === true),
 			deep = Base.pick(options ? options.deep : undefined, true);
 		if (children)
 			copy.copyAttributes(this);
@@ -3873,14 +3876,14 @@ new function() {
 		return copy;
 	},
 
-	copyContent: function(source) {
+		copyContent: function (source) {
 		var children = source._children;
 		for (var i = 0, l = children && children.length; i < l; i++) {
 			this.addChild(children[i].clone(false), true);
 		}
 	},
 
-	copyAttributes: function(source, excludeMatrix) {
+		copyAttributes: function (source, excludeMatrix) {
 		this.setStyle(source._style);
 		var keys = ['_locked', '_visible', '_blendMode', '_opacity',
 				'_clipMask', '_guide', '_enhanceBlendMode'];
@@ -3901,7 +3904,7 @@ new function() {
 			this.setName(name);
 	},
 
-	rasterize: function(arg0, arg1) {
+		rasterize: function (arg0, arg1) {
 		var resolution,
 			insert,
 			raster;
@@ -3943,7 +3946,7 @@ new function() {
 		return raster;
 	},
 
-	contains: function() {
+		contains: function () {
 		var matrix = this._matrix;
 		return (
 			matrix.isInvertible() &&
@@ -3951,7 +3954,7 @@ new function() {
 		);
 	},
 
-	_contains: function(point) {
+		_contains: function (point) {
 		var children = this._children;
 		if (children) {
 			for (var i = children.length - 1; i >= 0; i--) {
@@ -3963,11 +3966,11 @@ new function() {
 		return point.isInside(this.getInternalBounds());
 	},
 
-	isInside: function() {
+		isInside: function () {
 		return Rectangle.read(arguments).contains(this.getBounds());
 	},
 
-	_asPathItem: function() {
+		_asPathItem: function () {
 		return new Path.Rectangle({
 			rectangle: this.getInternalBounds(),
 			matrix: this._matrix,
@@ -3975,71 +3978,71 @@ new function() {
 		});
 	},
 
-	intersects: function(item, _matrix) {
+		intersects: function (item, _matrix) {
 		if (!(item instanceof Item))
 			return false;
 		return this._asPathItem().getIntersections(item._asPathItem(), null,
-				_matrix, true).length > 0;
+			_matrix, true).length > 0;
 	}
 },
-new function() {
-	function hitTest() {
-		var args = arguments;
-		return this._hitTest(
+	new function () {
+		function hitTest() {
+			var args = arguments;
+			return this._hitTest(
 				Point.read(args),
 				HitResult.getOptions(args));
-	}
-
-	function hitTestAll() {
-		var args = arguments,
-			point = Point.read(args),
-			options = HitResult.getOptions(args),
-			all = [];
-		this._hitTest(point, new Base({ all: all }, options));
-		return all;
-	}
-
-	function hitTestChildren(point, options, viewMatrix, _exclude) {
-		var children = this._children;
-		if (children) {
-			for (var i = children.length - 1; i >= 0; i--) {
-				var child = children[i];
-				var res = child !== _exclude && child._hitTest(point, options,
-						viewMatrix);
-				if (res && !options.all)
-					return res;
-			}
 		}
-		return null;
-	}
 
-	Project.inject({
-		hitTest: hitTest,
-		hitTestAll: hitTestAll,
-		_hitTest: hitTestChildren
-	});
+		function hitTestAll() {
+			var args = arguments,
+				point = Point.read(args),
+				options = HitResult.getOptions(args),
+				all = [];
+			this._hitTest(point, new Base({ all: all }, options));
+			return all;
+		}
 
-	return {
-		hitTest: hitTest,
-		hitTestAll: hitTestAll,
-		_hitTestChildren: hitTestChildren,
-	};
-}, {
+		function hitTestChildren(point, options, viewMatrix, _exclude) {
+			var children = this._children;
+			if (children) {
+				for (var i = children.length - 1; i >= 0; i--) {
+					var child = children[i];
+					var res = child !== _exclude && child._hitTest(point, options,
+						viewMatrix);
+					if (res && !options.all)
+						return res;
+				}
+			}
+			return null;
+		}
 
-	_hitTest: function(point, options, parentViewMatrix) {
+		Project.inject({
+			hitTest: hitTest,
+			hitTestAll: hitTestAll,
+			_hitTest: hitTestChildren
+		});
+
+		return {
+			hitTest: hitTest,
+			hitTestAll: hitTestAll,
+			_hitTestChildren: hitTestChildren,
+		};
+	}, {
+
+		_hitTest: function (point, options, parentViewMatrix) {
 		if (this._locked || !this._visible || this._guide && !options.guides
-				|| this.isEmpty()) {
+			|| this.isEmpty()) {
 			return null;
 		}
 
 		var matrix = this._matrix,
 			viewMatrix = parentViewMatrix
-					? parentViewMatrix.appended(matrix)
-					: this.getGlobalMatrix().prepend(this.getView()._matrix),
+				? parentViewMatrix.appended(matrix)
+				: this.getGlobalMatrix().prepend(this.getView()._matrix),
 			tolerance = Math.max(options.tolerance, 1e-12),
 			tolerancePadding = options._tolerancePadding = new Size(
-					Path._getStrokePadding(tolerance,
-						matrix._shiftless().invert()));
+				Path._getStrokePadding(tolerance,
+					matrix._shiftless().invert()));
 		point = matrix._inverseTransform(point);
 		if (!point || !this._children &&
 			!this.getBounds({ internal: true, stroke: true, handle: true })
@@ -4048,9 +4051,9 @@ new function() {
 		}
 
 		var checkSelf = !(options.guides && !this._guide
-				|| options.selected && !this.isSelected()
-				|| options.type && options.type !== Base.hyphenate(this._class)
-				|| options.class && !(this instanceof options.class)),
+			|| options.selected && !this.isSelected()
+			|| options.type && options.type !== Base.hyphenate(this._class)
+			|| options.class && !(this instanceof options.class)),
 			match = options.match,
 			that = this,
 			bounds,
@@ -4078,12 +4081,12 @@ new function() {
 			checkCenter = options.center,
 			checkBounds = options.bounds;
 		if (checkSelf && this._parent
-				&& (checkPosition || checkCenter || checkBounds)) {
+			&& (checkPosition || checkCenter || checkBounds)) {
 			if (checkCenter || checkBounds) {
 				bounds = this.getInternalBounds();
 			}
 			res = checkPosition && checkPoint('position') ||
-					checkCenter && checkPoint('center', 'Center');
+				checkCenter && checkPoint('center', 'Center');
 			if (!res && checkBounds) {
 				var points = [
 					'TopLeft', 'TopRight', 'BottomLeft', 'BottomRight',
@@ -4099,9 +4102,9 @@ new function() {
 		if (!res) {
 			res = this._hitTestChildren(point, options, viewMatrix)
 				|| checkSelf
-					&& filter(this._hitTestSelf(point, options, viewMatrix,
-						this.getStrokeScaling() ? null
-							: viewMatrix._shiftless().invert()))
+			&& filter(this._hitTestSelf(point, options, viewMatrix,
+				this.getStrokeScaling() ? null
+					: viewMatrix._shiftless().invert()))
 				|| null;
 		}
 		if (res && res.point) {
@@ -4110,12 +4113,12 @@ new function() {
 		return res;
 	},
 
-	_hitTestSelf: function(point, options) {
+		_hitTestSelf: function (point, options) {
 		if (options.fill && this.hasFill() && this._contains(point))
 			return new HitResult('fill', this);
 	},
 
-	matches: function(name, compare) {
+		matches: function (name, compare) {
 		function matchObject(obj1, obj2) {
 			for (var i in obj1) {
 				if (obj1.hasOwnProperty(i)) {
@@ -4144,10 +4147,10 @@ new function() {
 			return compare(this);
 		} else {
 			var value = /^(empty|editable)$/.test(name)
-					? this['is' + Base.capitalize(name)]()
-					: name === 'type'
-						? Base.hyphenate(this._class)
-						: this[name];
+				? this['is' + Base.capitalize(name)]()
+				: name === 'type'
+					? Base.hyphenate(this._class)
+					: this[name];
 			if (name === 'class') {
 				if (typeof compare === 'function')
 					return this instanceof compare;
@@ -4166,13 +4169,13 @@ new function() {
 		}
 	},
 
-	getItems: function(options) {
+		getItems: function (options) {
 		return Item._getItems(this, options, this._matrix);
 	},
 
-	getItem: function(options) {
+		getItem: function (options) {
 		return Item._getItems(this, options, this._matrix, null, true)[0]
-				|| null;
+			|| null;
 	},
 
 	statics: {
@@ -4213,8 +4216,8 @@ new function() {
 					if (!rect.intersects(bounds))
 						continue;
 					if (!(rect.contains(bounds)
-							|| param.overlapping && (bounds.contains(rect)
-								|| param.path.intersects(child, childMatrix))))
+						|| param.overlapping && (bounds.contains(rect)
+							|| param.path.intersects(child, childMatrix))))
 						add = false;
 				}
 				if (add && child.matches(options)) {
@@ -4233,25 +4236,25 @@ new function() {
 	}
 }, {
 
-	importJSON: function(json) {
+		importJSON: function (json) {
 		var res = Base.importJSON(json, this);
 		return res !== this ? this.addChild(res) : res;
 	},
 
-	addChild: function(item) {
+		addChild: function (item) {
 		return this.insertChild(undefined, item);
 	},
 
-	insertChild: function(index, item) {
+		insertChild: function (index, item) {
 		var res = item ? this.insertChildren(index, [item]) : null;
 		return res && res[0];
 	},
 
-	addChildren: function(items) {
+		addChildren: function (items) {
 		return this.insertChildren(this._children.length, items);
 	},
 
-	insertChildren: function(index, items) {
+		insertChildren: function (index, items) {
 		var children = this._children;
 		if (children && items && items.length > 0) {
 			items = Base.slice(items);
@@ -4288,7 +4291,7 @@ new function() {
 
 	_insertItem: '#insertChild',
 
-	_insertAt: function(item, offset) {
+		_insertAt: function (item, offset) {
 		var owner = item && item._getOwner(),
 			res = item !== this && owner ? this : null;
 		if (res) {
@@ -4298,27 +4301,27 @@ new function() {
 		return res;
 	},
 
-	insertAbove: function(item) {
+		insertAbove: function (item) {
 		return this._insertAt(item, 1);
 	},
 
-	insertBelow: function(item) {
+		insertBelow: function (item) {
 		return this._insertAt(item, 0);
 	},
 
-	sendToBack: function() {
+		sendToBack: function () {
 		var owner = this._getOwner();
 		return owner ? owner._insertItem(0, this) : null;
 	},
 
-	bringToFront: function() {
+		bringToFront: function () {
 		var owner = this._getOwner();
 		return owner ? owner._insertItem(undefined, this) : null;
 	},
 
 	appendTop: '#addChild',
 
-	appendBottom: function(item) {
+		appendBottom: function (item) {
 		return this.insertChild(0, item);
 	},
 
@@ -4326,15 +4329,15 @@ new function() {
 
 	moveBelow: '#insertBelow',
 
-	addTo: function(owner) {
+		addTo: function (owner) {
 		return owner._insertItem(undefined, this);
 	},
 
-	copyTo: function(owner) {
+		copyTo: function (owner) {
 		return this.clone(false).addTo(owner);
 	},
 
-	reduce: function(options) {
+		reduce: function (options) {
 		var children = this._children;
 		if (children && children.length === 1) {
 			var child = children[0].reduce(options);
@@ -4349,7 +4352,7 @@ new function() {
 		return this;
 	},
 
-	_removeNamed: function() {
+		_removeNamed: function () {
 		var owner = this._getOwner();
 		if (owner) {
 			var children = owner._children,
@@ -4370,7 +4373,7 @@ new function() {
 		}
 	},
 
-	_remove: function(notifySelf, notifyParent) {
+		_remove: function (notifySelf, notifyParent) {
 		var owner = this._getOwner(),
 			project = this._project,
 			index = this._index;
@@ -4382,7 +4385,7 @@ new function() {
 			if (index != null) {
 				if (project._activeLayer === this)
 					project._activeLayer = this.getNextSibling()
-							|| this.getPreviousSibling();
+						|| this.getPreviousSibling();
 				Base.splice(owner._children, null, index, 1);
 			}
 			this._installEvents(false);
@@ -4396,18 +4399,18 @@ new function() {
 		return false;
 	},
 
-	remove: function() {
+		remove: function () {
 		return this._remove(true, true);
 	},
 
-	replaceWith: function(item) {
+		replaceWith: function (item) {
 		var ok = item && item.insertBelow(this);
 		if (ok)
 			this.remove();
 		return ok;
 	},
 
-	removeChildren: function(start, end) {
+		removeChildren: function (start, end) {
 		if (!this._children)
 			return null;
 		start = start || 0;
@@ -4423,7 +4426,7 @@ new function() {
 
 	clear: '#removeChildren',
 
-	reverseChildren: function() {
+		reverseChildren: function () {
 		if (this._children) {
 			this._children.reverse();
 			for (var i = 0, l = this._children.length; i < l; i++)
@@ -4432,7 +4435,7 @@ new function() {
 		}
 	},
 
-	isEmpty: function(recursively) {
+		isEmpty: function (recursively) {
 		var children = this._children;
 		var numChildren = children ? children.length : 0;
 		if (recursively) {
@@ -4446,7 +4449,7 @@ new function() {
 		return !numChildren;
 	},
 
-	isEditable: function() {
+		isEditable: function () {
 		var item = this;
 		while (item) {
 			if (!item._visible || item._locked)
@@ -4456,19 +4459,19 @@ new function() {
 		return true;
 	},
 
-	hasFill: function() {
+		hasFill: function () {
 		return this.getStyle().hasFill();
 	},
 
-	hasStroke: function() {
+		hasStroke: function () {
 		return this.getStyle().hasStroke();
 	},
 
-	hasShadow: function() {
+		hasShadow: function () {
 		return this.getStyle().hasShadow();
 	},
 
-	_getOrder: function(item) {
+		_getOrder: function (item) {
 		function getList(item) {
 			var list = [];
 			do {
@@ -4486,31 +4489,31 @@ new function() {
 		return 0;
 	},
 
-	hasChildren: function() {
+		hasChildren: function () {
 		return this._children && this._children.length > 0;
 	},
 
-	isInserted: function() {
+		isInserted: function () {
 		return this._parent ? this._parent.isInserted() : false;
 	},
 
-	isAbove: function(item) {
+		isAbove: function (item) {
 		return this._getOrder(item) === -1;
 	},
 
-	isBelow: function(item) {
+		isBelow: function (item) {
 		return this._getOrder(item) === 1;
 	},
 
-	isParent: function(item) {
+		isParent: function (item) {
 		return this._parent === item;
 	},
 
-	isChild: function(item) {
+		isChild: function (item) {
 		return item && item._parent === this;
 	},
 
-	isDescendant: function(item) {
+		isDescendant: function (item) {
 		var parent = this;
 		while (parent = parent._parent) {
 			if (parent === item)
@@ -4519,42 +4522,42 @@ new function() {
 		return false;
 	},
 
-	isAncestor: function(item) {
+		isAncestor: function (item) {
 		return item ? item.isDescendant(this) : false;
 	},
 
-	isSibling: function(item) {
+		isSibling: function (item) {
 		return this._parent === item._parent;
 	},
 
-	isGroupedWith: function(item) {
+		isGroupedWith: function (item) {
 		var parent = this._parent;
 		while (parent) {
 			if (parent._parent
 				&& /^(Group|Layer|CompoundPath)$/.test(parent._class)
 				&& item.isDescendant(parent))
-					return true;
+				return true;
 			parent = parent._parent;
 		}
 		return false;
 	},
 
-}, Base.each(['rotate', 'scale', 'shear', 'skew'], function(key) {
+}, Base.each(['rotate', 'scale', 'shear', 'skew'], function (key) {
 	var rotate = key === 'rotate';
-	this[key] = function() {
+	this[key] = function () {
 		var args = arguments,
 			value = (rotate ? Base : Point).read(args),
 			center = Point.read(args, 0, { readNull: true });
 		return this.transform(new Matrix()[key](value,
-				center || this.getPosition(true)));
+			center || this.getPosition(true)));
 	};
 }, {
-	translate: function() {
+	translate: function () {
 		var mx = new Matrix();
 		return this.transform(mx.translate.apply(mx, arguments));
 	},
 
-	transform: function(matrix, _applyRecursively, _setApplyMatrix) {
+	transform: function (matrix, _applyRecursively, _setApplyMatrix) {
 		var _matrix = this._matrix,
 			transformMatrix = matrix && !matrix.isIdentity(),
 			applyMatrix = (
@@ -4580,7 +4583,7 @@ new function() {
 		}
 
 		if (applyMatrix && (applyMatrix = this._transformContent(
-				_matrix, _applyRecursively, _setApplyMatrix))) {
+			_matrix, _applyRecursively, _setApplyMatrix))) {
 			var pivot = this._pivot;
 			if (pivot)
 				_matrix._transformPoint(pivot, pivot, true);
@@ -4616,7 +4619,7 @@ new function() {
 		return this;
 	},
 
-	_transformContent: function(matrix, applyRecursively, setApplyMatrix) {
+	_transformContent: function (matrix, applyRecursively, setApplyMatrix) {
 		var children = this._children;
 		if (children) {
 			for (var i = 0, l = children.length; i < l; i++) {
@@ -4626,40 +4629,40 @@ new function() {
 		}
 	},
 
-	globalToLocal: function() {
+	globalToLocal: function () {
 		return this.getGlobalMatrix(true)._inverseTransform(
-				Point.read(arguments));
+			Point.read(arguments));
 	},
 
-	localToGlobal: function() {
+	localToGlobal: function () {
 		return this.getGlobalMatrix(true)._transformPoint(
-				Point.read(arguments));
+			Point.read(arguments));
 	},
 
-	parentToLocal: function() {
+	parentToLocal: function () {
 		return this._matrix._inverseTransform(Point.read(arguments));
 	},
 
-	localToParent: function() {
+	localToParent: function () {
 		return this._matrix._transformPoint(Point.read(arguments));
 	},
 
-	fitBounds: function(rectangle, fill) {
+	fitBounds: function (rectangle, fill) {
 		rectangle = Rectangle.read(arguments);
 		var bounds = this.getBounds(),
 			itemRatio = bounds.height / bounds.width,
 			rectRatio = rectangle.height / rectangle.width,
 			scale = (fill ? itemRatio > rectRatio : itemRatio < rectRatio)
-					? rectangle.width / bounds.width
-					: rectangle.height / bounds.height,
+				? rectangle.width / bounds.width
+				: rectangle.height / bounds.height,
 			newBounds = new Rectangle(new Point(),
-					new Size(bounds.width * scale, bounds.height * scale));
+				new Size(bounds.width * scale, bounds.height * scale));
 		newBounds.setCenter(rectangle.getCenter());
 		this.setBounds(newBounds);
 	}
 }), {
 
-	_setStyles: function(ctx, param, viewMatrix) {
+		_setStyles: function (ctx, param, viewMatrix) {
 		var style = this._style,
 			matrix = this._matrix;
 		if (style.hasFill()) {
@@ -4704,7 +4707,7 @@ new function() {
 		}
 	},
 
-	draw: function(ctx, param, parentStrokeMatrix) {
+		draw: function (ctx, param, parentStrokeMatrix) {
 		var updateVersion = this._updateVersion = this._project._updateVersion;
 		if (!this._visible || this._opacity === 0)
 			return;
@@ -4716,7 +4719,7 @@ new function() {
 			return;
 
 		viewMatrix = viewMatrix ? viewMatrix.appended(globalMatrix)
-				: globalMatrix;
+			: globalMatrix;
 
 		matrices.push(globalMatrix);
 		if (param.updateMatrix) {
@@ -4724,15 +4727,16 @@ new function() {
 		}
 
 		var enhanceBlendMode = this._enhanceBlendMode;
+
 		var blendMode = this._blendMode,
 			opacity = Numerical.clamp(this._opacity, 0, 1),
 			normalBlend = blendMode === 'normal',
 			nativeBlend = BlendMode.nativeModes[blendMode],
 			direct = normalBlend && opacity === 1
-					|| param.dontStart
-					|| param.clip
-					|| (nativeBlend || normalBlend && opacity < 1)
-						&& this._canComposite(),
+				|| param.dontStart
+				|| param.clip
+				|| (nativeBlend || normalBlend && opacity < 1)
+				&& this._canComposite(),
 			pixelRatio = param.pixelRatio || 1,
 			mainCtx, itemOffset, prevOffset;
 		if (!direct) {
@@ -4741,22 +4745,24 @@ new function() {
 				matrices.pop();
 				return;
 			}
-			if (this._class && this._class !== 'Raster')
-				bounds = bounds.expand(bounds.width * 1.51, bounds.height * 1.51);
+			if (this._class && this._class !== 'Raster') {
+				var actualBounds = this.getActualTextBounds(viewMatrix);
+				bounds = bounds.unite(actualBounds);
+			}
 
 			prevOffset = param.offset;
 			itemOffset = param.offset = bounds.getTopLeft().floor();
 			mainCtx = ctx;
 			ctx = CanvasProvider.getContext(bounds.getSize().ceil().add(1)
-					.multiply(pixelRatio));
+				.multiply(pixelRatio));
 			if (pixelRatio !== 1)
 				ctx.scale(pixelRatio, pixelRatio);
 		}
 		ctx.save();
 		var strokeMatrix = parentStrokeMatrix
-				? parentStrokeMatrix.appended(matrix)
-				: this._canScaleStroke && !this.getStrokeScaling(true)
-					&& viewMatrix,
+			? parentStrokeMatrix.appended(matrix)
+			: this._canScaleStroke && !this.getStrokeScaling(true)
+			&& viewMatrix,
 			clip = !direct && param.clipItem,
 			transform = !strokeMatrix || clip;
 		if (direct) {
@@ -4779,9 +4785,9 @@ new function() {
 				ctx.translate(-offset.x, -offset.y);
 		}
 		this._draw(ctx, param, viewMatrix, strokeMatrix);
-		if (direct && blendMode != "normal" && enhanceBlendMode) {
-			this._draw(ctx, param, viewMatrix, strokeMatrix);
-		}
+			if (direct && blendMode != "normal" && enhanceBlendMode) {
+				this._draw(ctx, param, viewMatrix, strokeMatrix);
+			}
 
 		ctx.restore();
 		matrices.pop();
@@ -4790,7 +4796,7 @@ new function() {
 		}
 		if (!direct) {
 			BlendMode.process(blendMode, ctx, mainCtx, opacity,
-					itemOffset.subtract(prevOffset).multiply(pixelRatio));
+				itemOffset.subtract(prevOffset).multiply(pixelRatio));
 
 			ctx.restore();
 			if (blendMode != "normal" && enhanceBlendMode) {
@@ -4803,36 +4809,36 @@ new function() {
 		}
 	},
 
-	_isUpdated: function(updateVersion) {
+		_isUpdated: function (updateVersion) {
 		var parent = this._parent;
 		if (parent instanceof CompoundPath)
 			return parent._isUpdated(updateVersion);
 		var updated = this._updateVersion === updateVersion;
 		if (!updated && parent && parent._visible
-				&& parent._isUpdated(updateVersion)) {
+			&& parent._isUpdated(updateVersion)) {
 			this._updateVersion = updateVersion;
 			updated = true;
 		}
 		return updated;
 	},
 
-	_drawSelection: function(ctx, matrix, size, selectionItems, updateVersion) {
+		_drawSelection: function (ctx, matrix, size, selectionItems, updateVersion) {
 		var selection = this._selection,
 			itemSelected = selection & 1,
 			boundsSelected = selection & 2
-					|| itemSelected && this._selectBounds,
+				|| itemSelected && this._selectBounds,
 			positionSelected = selection & 4;
 		if (!this._drawSelected)
 			itemSelected = false;
 		if ((itemSelected || boundsSelected || positionSelected)
-				&& this._isUpdated(updateVersion)) {
+			&& this._isUpdated(updateVersion)) {
 			var layer,
 				color = this.getSelectedColor(true) || (layer = this.getLayer())
 					&& layer.getSelectedColor(true),
 				mx = matrix.appended(this.getGlobalMatrix(true)),
 				half = size / 2;
 			ctx.strokeStyle = ctx.fillStyle = color
-					? color.toCanvasStyle(ctx) : '#009dec';
+				? color.toCanvasStyle(ctx) : '#009dec';
 			if (itemSelected)
 				this._drawSelected(ctx, mx, selectionItems);
 			if (positionSelected) {
@@ -4866,24 +4872,24 @@ new function() {
 				ctx.stroke();
 				for (var i = 0; i < 8; i++) {
 					ctx.fillRect(coords[i] - half, coords[++i] - half,
-							size, size);
+						size, size);
 				}
 			}
 		}
 	},
 
-	_canComposite: function() {
+		_canComposite: function () {
 		return false;
 	}
-}, Base.each(['down', 'drag', 'up', 'move'], function(key) {
-	this['removeOn' + Base.capitalize(key)] = function() {
+}, Base.each(['down', 'drag', 'up', 'move'], function (key) {
+	this['removeOn' + Base.capitalize(key)] = function () {
 		var hash = {};
 		hash[key] = true;
 		return this.removeOn(hash);
 	};
 }, {
 
-	removeOn: function(obj) {
+	removeOn: function (obj) {
 		for (var name in obj) {
 			if (obj[name]) {
 				var key = 'mouse' + name,
@@ -4896,7 +4902,7 @@ new function() {
 		return this;
 	}
 }), {
-	tween: function(from, to, options) {
+		tween: function (from, to, options) {
 		if (!options) {
 			options = to;
 			to = from;
@@ -4924,11 +4930,11 @@ new function() {
 		return tween;
 	},
 
-	tweenTo: function(to, options) {
+		tweenTo: function (to, options) {
 		return this.tween(null, to, options);
 	},
 
-	tweenFrom: function(from, options) {
+		tweenFrom: function (from, options) {
 		return this.tween(from, null, options);
 	}
 });
@@ -10144,13 +10150,18 @@ Path.inject({ statics: new function() {
 var CompoundPath = PathItem.extend({
 	_class: 'CompoundPath',
 	_serializeFields: {
-		children: []
+		children: [],
+		fillImage: null,
+		fillImageSettings:null,
 	},
 	beans: true,
 
 	initialize: function CompoundPath(arg) {
 		this._children = [];
 		this._namedChildren = {};
+		this._fillImage = null;
+		this._loaded = false;
+		this._fillImageSettings = null;
 		if (!this._initialize(arg)) {
 			if (typeof arg === 'string') {
 				this.setPathData(arg);
@@ -10158,6 +10169,76 @@ var CompoundPath = PathItem.extend({
 				this.addChildren(Array.isArray(arg) ? arg : arguments);
 			}
 		}
+	},
+
+	getLoaded: function () {
+		return this._loaded;
+	},
+
+	setLoaded: function (loaded) {
+		this._loaded = loaded;
+	},
+
+	getFillImage: function () {
+		return this._fillImage ? this._fillImage.src : null;
+	},
+
+	setFillImage: function (url) {
+		var that = this;
+
+		if (!url && that._fillImage) {
+			that._loaded = true;
+			that._fillImage = null;
+			this._changed(129);
+		}
+
+		if (url) {
+			function emit(event) {
+				var view = that.getView(),
+					type = event && event.type || 'load';
+				if (view && that.responds(type)) {
+					paper = view._scope;
+					that.emit(type, new Event(event));
+				}
+			}
+
+			var cachedImage = ImageCache.get(url);
+			if (cachedImage) {
+				that._loaded = true;
+				that._fillImage = cachedImage;
+				that._changed(129);
+				emit({ type: 'load' });
+				return;
+			}
+
+			var image = new self.Image();
+			image.crossOrigin = 'anonymous';
+			image.src = url;
+
+			that._loaded = (image && image.src && image.complete);
+
+			DomEvent.add(image, {
+				load: function (event) {
+					that._loaded = true;
+					that._fillImage = image;
+					ImageCache.set(url, image);
+					that._changed(129);
+					emit(event);
+				},
+				error: emit
+			});
+
+			this._changed(129);
+		}
+	},
+
+	getFillImageSettings: function () {
+		return this._fillImageSettings;
+	},
+
+	setFillImageSettings: function (textureOptions) {
+		this._fillImageSettings = textureOptions;
+		this._changed(129);
 	},
 
 	insertChildren: function insertChildren(index, items) {
@@ -10283,10 +10364,11 @@ var CompoundPath = PathItem.extend({
 
 		param = param.extend({ dontStart: true, dontFinish: true });
 		ctx.beginPath();
-		for (var i = 0, l = children.length; i < l; i++)
+		for (var i = 0, l = children.length; i < l; i++){
 			children[i].draw(ctx, param, strokeMatrix);
+		}
 
-		if (!param.clip) {
+		if (!param.clip && !this._fillImage) {
 			this._setStyles(ctx, param, viewMatrix);
 			var style = this._style;
 			if (style.hasFill()) {
@@ -10295,6 +10377,127 @@ var CompoundPath = PathItem.extend({
 			}
 			if (style.hasStroke())
 				ctx.stroke();
+		}
+
+		if(this._fillImage){
+			var bounds = this.bounds;
+			const textWidth = bounds.width;
+			var scaling = Math.max(5, textWidth / 50);
+			var canvasWidth = Math.round(textWidth * scaling);
+			var canvasHeight = Math.round(bounds.height * scaling * 1.5);
+
+			if (canvasWidth <= 0 || canvasHeight <= 0) {
+				return;
+			}
+			canvasWidth = bounds.width + 100;
+			canvasHeight = bounds.height + 100;
+			var newCtx = CanvasProvider.getContext(canvasWidth, canvasHeight);
+
+			this._setStyles(newCtx, param, viewMatrix);
+
+			let myTest = () => {
+				return false;
+			}
+			var DEBUG = myTest();
+
+			if (DEBUG) {
+				document.body.append(newCtx.canvas);
+				newCtx.canvas.style.position = 'fixed';
+				newCtx.canvas.style.left = '0px';
+				newCtx.canvas.style.top = '0px';
+				newCtx.canvas.style.zIndex = '1000';
+
+				CanvasProvider.release(newCtx);
+			}
+
+			var style = this._style;
+			newCtx.shadowColor = null;
+			newCtx.font = ctx.font;
+
+			const positionX = canvasWidth/2 - bounds.center.x;
+			const positionY = canvasHeight/2 - bounds.center.y;
+
+			newCtx.translate(positionX, positionY);
+
+			for (var i = 0, l = children.length; i < l; i++){
+				const child = children[i];
+				child.draw(newCtx, param, strokeMatrix);
+			}
+			var imageRatio = this._fillImage.width / this._fillImage.height;
+
+			if (style.hasFill()) {
+				newCtx.fill(style.getFillRule());
+				newCtx.shadowColor = 'rgba(0,0,0,0)';
+			}
+
+			newCtx.globalCompositeOperation = "source-in";
+			const imagePositionX = -bounds.width/2 + bounds.center.x;
+			const imagePositionY = -bounds.height/2 + bounds.center.y;
+			newCtx.translate(imagePositionX,imagePositionY);
+
+			let leftImage = 0;
+			let topImage = 0;
+			let widthImage = textWidth;
+			let heightImage = textWidth / imageRatio;
+
+			if (bounds.height > bounds.width) {
+				heightImage = bounds.height;
+				widthImage = bounds.height * imageRatio;
+			}
+
+			if (this._fillImageSettings && widthImage > 0 && heightImage > 0) {
+				if (this._fillImageSettings.syncRatio) {
+					if (this._fillImageSettings.hasOwnProperty("scaling")) {
+						widthImage *= this._fillImageSettings.scaling;
+						heightImage *= this._fillImageSettings.scaling;
+					}
+				} else {
+					if (this._fillImageSettings.hasOwnProperty("scalingX")) {
+						widthImage *= this._fillImageSettings.scalingX;
+					}
+					if (this._fillImageSettings.hasOwnProperty("scalingY")) {
+						heightImage *= this._fillImageSettings.scalingY;
+					}
+				}
+				if (this._fillImageSettings.hasOwnProperty("leftPosition")) {
+					leftImage += this._fillImageSettings.leftPosition;
+				}
+				if (this._fillImageSettings.hasOwnProperty("topPosition")) {
+					topImage -= this._fillImageSettings.topPosition;
+				}
+			}
+
+			newCtx.translate(leftImage, topImage);
+
+			if (this._fillImageSettings && widthImage > 0 && heightImage > 0) {
+
+				if (this._fillImageSettings.horizontalFlip) {
+					newCtx.translate(widthImage, 0);
+					newCtx.scale(-1, 1);
+				}
+				if (this._fillImageSettings.verticalFlip) {
+					newCtx.translate(0, heightImage);
+					newCtx.scale(1, -1);
+				}
+				if (this._fillImageSettings.hasOwnProperty("rotation")) {
+					newCtx.translate(widthImage / 2, heightImage / 2);
+					var radiants = (this._fillImageSettings.rotation * Math.PI) / 180;
+					newCtx.rotate(radiants);
+					newCtx.translate(-widthImage / 2, -heightImage / 2);
+				}
+			}
+
+			if (widthImage > 0 && heightImage > 0 && bounds.height > 0) {
+				newCtx.drawImage(this._fillImage, 0, 0, widthImage, heightImage);
+			}
+
+			newCtx.globalCompositeOperation = "source-over";
+
+			if (style.hasStroke()){
+				newCtx.stroke();
+			}
+
+			ctx.drawImage(newCtx.canvas, -positionX, -positionY);
 		}
 	},
 
@@ -11759,7 +11962,7 @@ var PointText = TextItem.extend({
 
 			var line = lines[i];
 
-			if (!this._textureFill) {
+			if (!this._textureFill && !this.data.textureFillStrokedText) {
 				if (hasFill) {
 					ctx.fillText(line, 0, 0);
 					ctx.shadowColor = 'rgba(0,0,0,0)';
@@ -11768,8 +11971,47 @@ var PointText = TextItem.extend({
 				if (hasStroke) {
 					ctx.strokeText(line, 0, 0);
 				}
+			} else if (this.data.textureFillStrokedText) {
+				var bounds = this._getBounds(null, { actualText: true });
+				const textWidth = bounds.width;
+				var scaling = Math.max(5, textWidth / 50);
+				var canvasWidth = Math.round(textWidth * scaling);
+				var canvasHeight = Math.round(bounds.height * scaling * 1.5);
+
+				if (canvasWidth <= 0 || canvasHeight <= 0) {
+					continue;
+				}
+
+				var newCtx = CanvasProvider.getContext(canvasWidth, canvasHeight);
+				this._setStyles(newCtx, param, viewMatrix);
+				newCtx.shadowColor = null;
+				newCtx.scale(scaling, scaling);
+				newCtx.translate(0, bounds.height);
+				newCtx.font = ctx.font;
+
+				if (hasStroke) {
+					newCtx.strokeText(line, 0, 0);
+				}
+
+				newCtx.globalCompositeOperation = "destination-out";
+
+				if (hasFill) {
+					newCtx.fillText(line, 0, 0);
+				}
+
+				var metrics = ctx.measureText(line);
+				let boundingBoxLeft = metrics.actualBoundingBoxLeft;
+
+				ctx.translate(-boundingBoxLeft, -bounds.height);
+				ctx.scale(1 / scaling, 1 / scaling);
+				ctx.drawImage(newCtx.canvas, 0, 0);
+				ctx.scale(scaling, scaling);
+				ctx.translate(0, bounds.height);
+
 			} else {
-				var bounds = this._getBounds();
+
+				var metrics = ctx.measureText(line);
+				var bounds = this._getBounds(null, { actualText: true });
 				const textWidth = bounds.width;
 				var scaling = Math.max(5, textWidth / 50);
 				var canvasWidth = Math.round(textWidth * scaling);
@@ -11790,115 +12032,113 @@ var PointText = TextItem.extend({
 					newCtx.fillText(line, 0, 0);
 				}
 
-				if (this._textureFill) {
-					newCtx.translate(bounds.x, bounds.y);
-					newCtx.globalCompositeOperation = "source-atop";
-					var imageRatio = this._textureFill.width / this._textureFill.height;
+				newCtx.translate(bounds.x, bounds.y);
+				newCtx.globalCompositeOperation = "source-in";
+				var imageRatio = this._textureFill.width / this._textureFill.height;
 
-					var leftImage = 0;
-					var topImage = 0;
-					var widthImage = textWidth;
-					var heightImage = textWidth / imageRatio;
+				var leftImage = 0;
+				var topImage = 0;
+				var widthImage = textWidth;
+				var heightImage = textWidth / imageRatio;
 
-					if (bounds.height > bounds.width) {
-						heightImage = bounds.height;
-						widthImage = bounds.height * imageRatio;
+				if (bounds.height > bounds.width) {
+					heightImage = bounds.height;
+					widthImage = bounds.height * imageRatio;
+				}
+
+				if (this._textureOptions && widthImage > 0 && heightImage > 0) {
+					var hasTextWidth = this._textureOptions.hasOwnProperty("textWidth");
+					var hasTextHeight = this._textureOptions.hasOwnProperty("textHeight");
+
+					if (hasTextWidth) {
+						widthImage = Math.round(this._textureOptions.textWidth);
+						heightImage = Math.round(widthImage / imageRatio);
 					}
 
-					if (this._textureOptions && widthImage > 0 && heightImage > 0) {
-						var hasTextWidth = this._textureOptions.hasOwnProperty("textWidth");
-						var hasTextHeight = this._textureOptions.hasOwnProperty("textHeight");
+					if (hasTextWidth && hasTextHeight && this._textureOptions.textHeight > this._textureOptions.textWidth) {
+						heightImage = Math.round(this._textureOptions.textHeight);
+						widthImage = Math.round(this._textureOptions.textHeight * imageRatio);
+					}
 
-						if (hasTextWidth) {
-							widthImage = Math.round(this._textureOptions.textWidth);
-							heightImage = Math.round(widthImage / imageRatio);
-						}
+					if (this._textureOptions.hasOwnProperty("offsetLeft")) {
+						leftImage = -this._textureOptions.offsetLeft;
+					}
+					if (this._textureOptions.hasOwnProperty("offsetTop")) {
+						topImage = -this._textureOptions.offsetTop;
+					}
 
-						if (hasTextWidth && hasTextHeight && this._textureOptions.textHeight > this._textureOptions.textWidth) {
-							heightImage = Math.round(this._textureOptions.textHeight);
-							widthImage = Math.round(this._textureOptions.textHeight * imageRatio);
+					if (this._textureOptions.syncRatio) {
+						if (this._textureOptions.hasOwnProperty("scaling")) {
+							widthImage *= this._textureOptions.scaling;
+							heightImage *= this._textureOptions.scaling;
 						}
-
-						if (this._textureOptions.hasOwnProperty("offsetLeft")) {
-							leftImage = -this._textureOptions.offsetLeft;
+					} else {
+						if (this._textureOptions.hasOwnProperty("scalingX")) {
+							widthImage *= this._textureOptions.scalingX;
 						}
-						if (this._textureOptions.hasOwnProperty("offsetTop")) {
-							topImage = -this._textureOptions.offsetTop;
-						}
-
-						if (this._textureOptions.syncRatio) {
-							if (this._textureOptions.hasOwnProperty("scaling")) {
-								widthImage *= this._textureOptions.scaling;
-								heightImage *= this._textureOptions.scaling;
-							}
-						} else {
-							if (this._textureOptions.hasOwnProperty("scalingX")) {
-								widthImage *= this._textureOptions.scalingX;
-							}
-							if (this._textureOptions.hasOwnProperty("scalingY")) {
-								heightImage *= this._textureOptions.scalingY;
-							}
-						}
-
-						if (this._textureOptions.hasOwnProperty("leftPosition")) {
-							leftImage += this._textureOptions.leftPosition;
-						}
-						if (this._textureOptions.hasOwnProperty("topPosition")) {
-							topImage -= this._textureOptions.topPosition;
+						if (this._textureOptions.hasOwnProperty("scalingY")) {
+							heightImage *= this._textureOptions.scalingY;
 						}
 					}
 
-					newCtx.translate(leftImage, topImage);
+					if (this._textureOptions.hasOwnProperty("leftPosition")) {
+						leftImage += this._textureOptions.leftPosition;
+					}
+					if (this._textureOptions.hasOwnProperty("topPosition")) {
+						topImage -= this._textureOptions.topPosition;
+					}
+				}
 
-					if (this._textureOptions && widthImage > 0 && heightImage > 0) {
+				newCtx.translate(leftImage, topImage);
 
-						if (this._textureOptions.horizontalFlip) {
-							newCtx.translate(widthImage, 0);
-							newCtx.scale(-1, 1);
-						}
-						if (this._textureOptions.verticalFlip) {
-							newCtx.translate(0, heightImage);
-							newCtx.scale(1, -1);
-						}
+				if (this._textureOptions && widthImage > 0 && heightImage > 0) {
 
-						if (this._textureOptions.hasOwnProperty("rotation")) {
-							newCtx.translate(widthImage / 2, heightImage / 2);
-							var radiants = (this._textureOptions.rotation * Math.PI) / 180;
-							newCtx.rotate(radiants);
-							newCtx.translate(-widthImage / 2, -heightImage / 2);
-						}
-
+					if (this._textureOptions.horizontalFlip) {
+						newCtx.translate(widthImage, 0);
+						newCtx.scale(-1, 1);
+					}
+					if (this._textureOptions.verticalFlip) {
+						newCtx.translate(0, heightImage);
+						newCtx.scale(1, -1);
 					}
 
-					if (widthImage > 0 && heightImage > 0 && bounds.height > 0) {
-						var metrics = ctx.measureText(line);
-						let boundingBoxLeft = metrics.actualBoundingBoxLeft;
-						if(ctx.textAlign == "center"){
-							const halfWidth = metrics.width / 2;
-							boundingBoxLeft = halfWidth;
-							newCtx.translate(halfWidth,0);
-						}
-						newCtx.drawImage(this._textureFill, 0, 0, widthImage, heightImage);
-						ctx.translate(-boundingBoxLeft, -bounds.height);
-						ctx.scale(1 / scaling, 1 / scaling);
-						ctx.drawImage(newCtx.canvas, 0, 0);
-						ctx.scale(scaling, scaling);
-						ctx.translate(0, bounds.height);
+					if (this._textureOptions.hasOwnProperty("rotation")) {
+						newCtx.translate(widthImage / 2, heightImage / 2);
+						var radiants = (this._textureOptions.rotation * Math.PI) / 180;
+						newCtx.rotate(radiants);
+						newCtx.translate(-widthImage / 2, -heightImage / 2);
+					}
 
-						if (hasStroke) {
-							newCtx.strokeText(line, 0, 0);
-						}
+				}
 
-						var DEBUG = false;
+				if (widthImage > 0 && heightImage > 0 && bounds.height > 0) {
+					let boundingBoxLeft = metrics.actualBoundingBoxLeft;
+					if (ctx.textAlign == "center") {
+						const halfWidth = metrics.width / 2;
+						boundingBoxLeft = halfWidth;
+						newCtx.translate(halfWidth, 0);
+					}
+					newCtx.drawImage(this._textureFill, 0, 0, widthImage, heightImage);
 
-						if (DEBUG) {
-							document.body.append(newCtx.canvas);
-							newCtx.canvas.style.position = 'fixed';
-							newCtx.canvas.style.left = '0px';
-							newCtx.canvas.style.top = '0px';
-							newCtx.canvas.style.zIndex = '1000';
-							CanvasProvider.release(newCtx);
-						}
+					ctx.translate(-boundingBoxLeft, -bounds.height);
+					ctx.scale(1 / scaling, 1 / scaling);
+					ctx.drawImage(newCtx.canvas, 0, 0);
+					ctx.scale(scaling, scaling);
+					ctx.translate(0, bounds.height);
+
+					if (hasStroke) {
+						newCtx.strokeText(line, 0, 0);
+					}
+
+					var DEBUG = false;
+
+					if (DEBUG) {
+						document.body.append(newCtx.canvas);
+						newCtx.canvas.style.position = 'fixed';
+						newCtx.canvas.style.left = '0px';
+						newCtx.canvas.style.top = '0px';
+						newCtx.canvas.style.zIndex = '1000';
+						CanvasProvider.release(newCtx);
 					}
 				}
 			}
@@ -11913,7 +12153,7 @@ var PointText = TextItem.extend({
 			numLines = lines.length,
 			justification = style.getJustification(),
 			leading = style.getLeading(),
-			width = this.getView().getTextWidth(style.getFontStyle(), lines),
+			width = options && options.actualText ? this.getView().getActualTextWidth(style.getFontStyle(), lines) : this.getView().getTextWidth(style.getFontStyle(), lines),
 			x = 0;
 		if (justification !== 'left')
 			x -= width / (justification === 'center' ? 2 : 1);
@@ -13836,7 +14076,7 @@ var CanvasView = View.extend(
 				if (size.isZero())
 					throw new Error(
 						"Cannot create CanvasView with the provided argument: " +
-							Base.slice(arguments, 1)
+						Base.slice(arguments, 1)
 					);
 				canvas = CanvasProvider.getCanvas(size);
 			}
@@ -13905,7 +14145,24 @@ var CanvasView = View.extend(
 				width = 0;
 			ctx.font = font;
 			for (var i = 0, l = lines.length; i < l; i++) {
-				width = Math.max(width, ctx.measureText(lines[i]).width);
+				var measure = ctx.measureText(lines[i]);
+				var lineWidth = measure.width;
+				if (lineWidth > width) width = lineWidth;
+			}
+			ctx.font = prevFont;
+			return width;
+		},
+
+		getActualTextWidth: function (font, lines) {
+			var ctx = this._context,
+				prevFont = ctx.font,
+				width = 0;
+			ctx.font = font;
+			for (var i = 0, l = lines.length; i < l; i++) {
+
+				var measure = ctx.measureText(lines[i]);
+				var lineWidth = measure.actualBoundingBoxRight + measure.actualBoundingBoxLeft;
+				if (lineWidth > width) width = lineWidth;
 			}
 			ctx.font = prevFont;
 			return width;
@@ -15189,11 +15446,142 @@ new function () {
 	}
 
 	function exportCompoundPath(item, options) {
-		var attrs = getTransform(item._matrix);
-		var data = item.getPathData(null, options.precision);
-		if (data)
-			attrs.d = data;
-		return SvgElement.create('path', attrs, formatter);
+		if(!item._fillImage){
+			var attrs = getTransform(item._matrix);
+			var data = item.getPathData(null, options.precision);
+			if (data)
+				attrs.d = data;
+			const path = SvgElement.create('path', attrs, formatter);
+			return path;
+		}
+		if(item._fillImage){
+			var attrs = getTransform(item._matrix);
+			const group = SvgElement.create('g', attrs, formatter);
+			var data = item.getPathData(null, options.precision);
+			if (data)
+				attrs.d = data;
+
+			const path = SvgElement.create('path', attrs, formatter);
+
+			group.appendChild(path);
+
+			const fillImageSettings = item._fillImageSettings;
+
+			 var bounds = item.bounds;
+
+			var imageRatio = item._fillImage.naturalWidth / item._fillImage.naturalHeight;
+
+			var leftImage = 0;
+			var topImage = 0;
+			var widthImage = bounds.width;
+			var heightImage = bounds.width / imageRatio;
+
+			if (bounds.height > bounds.width) {
+				heightImage = bounds.height;
+				widthImage = bounds.height * imageRatio;
+			}
+
+			heightImage = Math.round(heightImage);
+			widthImage = Math.round(widthImage);
+
+			if (fillImageSettings && widthImage > 0 && heightImage > 0) {
+				var hasTextWidth = fillImageSettings.hasOwnProperty("textWidth");
+				var hasTextHeight = fillImageSettings.hasOwnProperty("textHeight");
+
+				if (hasTextWidth) {
+					widthImage = Math.round(fillImageSettings.textWidth);
+					heightImage = Math.round(widthImage / imageRatio);
+				}
+
+				if (hasTextWidth && hasTextHeight && fillImageSettings.textHeight > fillImageSettings.textWidth) {
+					heightImage = Math.round(fillImageSettings.textHeight);
+					widthImage = Math.round(fillImageSettings.textHeight * imageRatio);
+				}
+
+				if (fillImageSettings.hasOwnProperty("offsetLeft")) {
+					leftImage = -fillImageSettings.offsetLeft;
+				}
+				if (fillImageSettings.hasOwnProperty("offsetTop")) {
+					topImage = -fillImageSettings.offsetTop;
+				}
+
+				if (fillImageSettings.syncRatio) {
+					if (fillImageSettings.hasOwnProperty("scaling")) {
+						widthImage *= fillImageSettings.scaling;
+						heightImage *= fillImageSettings.scaling;
+					}
+				} else {
+					if (fillImageSettings.hasOwnProperty("scalingX")) {
+						widthImage *= fillImageSettings.scalingX;
+					}
+					if (fillImageSettings.hasOwnProperty("scalingY")) {
+						heightImage *= fillImageSettings.scalingY;
+					}
+				}
+
+				if (fillImageSettings.hasOwnProperty("leftPosition")) {
+					leftImage += fillImageSettings.leftPosition;
+				}
+				if (fillImageSettings.hasOwnProperty("topPosition")) {
+					topImage -= fillImageSettings.topPosition;
+				}
+			}
+
+			var image = SvgElement.create('image');
+			image.setAttribute('href', item._fillImage.src);
+			image.setAttribute('width', widthImage + 'px');
+			image.setAttribute('height', heightImage + 'px');
+
+			setDefinition(item, image, 'image');
+
+			var filter = SvgElement.create('filter');
+
+			var feImage = SvgElement.create('feImage', {
+				href: '#' + image.id,
+				x: (bounds.x + leftImage) + 'px',
+				y: (bounds.y + topImage) + 'px',
+				width: widthImage + 'px',
+				height: heightImage + 'px'
+			}, formatter);
+
+			if (fillImageSettings && widthImage > 0 && heightImage > 0) {
+				var transforms = [];
+
+				if (fillImageSettings.horizontalFlip || fillImageSettings.verticalFlip) {
+					var scaleX = fillImageSettings.horizontalFlip ? -1 : 1;
+					var scaleY = fillImageSettings.verticalFlip ? -1 : 1;
+					var translateX = fillImageSettings.horizontalFlip ? widthImage : 0;
+					var translateY = fillImageSettings.verticalFlip ? heightImage : 0;
+					transforms.push('translate(' + translateX + ',' + translateY + ')');
+					transforms.push('scale(' + scaleX + ',' + scaleY + ')');
+				}
+
+				if (fillImageSettings.hasOwnProperty("rotation")) {
+					var centerX = widthImage / 2;
+					var centerY = heightImage / 2;
+					transforms.push('translate(' + centerX + ',' + centerY + ')');
+					transforms.push('rotate(' + fillImageSettings.rotation + ')');
+					transforms.push('translate(' + (-centerX) + ',' + (-centerY) + ')');
+				}
+
+				if (transforms.length > 0) {
+					image.setAttribute('transform', transforms.join(' '));
+				}
+			}
+
+			var feComposite = SvgElement.create('feComposite', {
+				in2: 'SourceGraphic',
+				operator: 'in'
+			}, formatter);
+
+			filter.appendChild(feImage);
+			filter.appendChild(feComposite);
+
+			setDefinition(item, filter, 'filter');
+			group.setAttribute("filter", 'url(#' + filter.id + ') ');
+
+			return group;
+		}
 	}
 
 	function exportSymbolItem(item, options) {
@@ -15218,44 +15606,75 @@ new function () {
 		return SvgElement.create('use', attrs, formatter);
 	}
 
-	function exportGradient(color, item) {
+	function exportGradient(color, item, parentItem) {
 		var gradientNode = getDefinition(color, 'color');
 		var matrix = (item.data && item.data.originalMatrix) || item._matrix;
-		var bounds = item._getBounds(matrix.inverted(), { cacheItem: item }).rect;
-
-		if (item.data && item.data.originalMatrix) {
-			matrix = item.data.originalMatrix;
-		}
+		var myBounds = item._getBounds(matrix.inverted(), { cacheItem: item }).rect;
 
 		if (!gradientNode) {
 			var gradient = color.getGradient(),
 				radial = gradient._radial,
-				origin = color.getOrigin(),
-				destination = color.getDestination(),
 				attrs;
 
-			var transformedOrigin = item.data.localGradientOrigin;
-			var transformedDestination = item.data.localGradientDestination;
+			var transformedOrigin = item.data.localGradientOrigin ?? parentItem.data.localGradientOrigin;
+			var transformedDestination = item.data.localGradientDestination ?? parentItem.data.localGradientDestination;
 			var transformedHighlight = highlight ? matrix._inverseTransform(highlight) : null;
 
 			if (radial) {
-				attrs = {
-					cx: transformedOrigin.x + bounds.width / 2,
-					cy: (transformedOrigin.y - bounds.height / 2) / 2,
-					r: transformedOrigin.getDistance(transformedDestination)
-				};
-				var highlight = color.getHighlight();
-				if (highlight) {
-					attrs.fx = transformedHighlight.x;
-					attrs.fy = transformedHighlight.y;
+				if (parentItem && parentItem.data.isTextOnPath) {
+					var parentBounds = parentItem ? parentItem.bounds : null;
+
+					var newOriginX = transformedOrigin.x + parentBounds.x;
+					var newOriginY = transformedOrigin.y + parentBounds.y;
+					var newOrigin = item.globalToLocal([newOriginX, newOriginY]);
+
+					var newDestinationX = transformedDestination.x + parentBounds.x;
+					var newDestinationY = transformedDestination.y + parentBounds.y;
+					var newDestination = item.globalToLocal([newDestinationX, newDestinationY]);
+
+					attrs = {
+						cx: newOrigin.x,
+						cy: (newOrigin.y - myBounds.height / 2) / 2,
+						r: newOrigin.getDistance(newDestination)
+					};
+				} else {
+					attrs = {
+						cx: transformedOrigin.x + myBounds.width / 2,
+						cy: (transformedOrigin.y - myBounds.height / 2) / 2,
+						r: transformedOrigin.getDistance(transformedDestination)
+					};
+					var highlight = color.getHighlight();
+					if (highlight) {
+						attrs.fx = transformedHighlight.x;
+						attrs.fy = transformedHighlight.y;
+					}
 				}
 			} else {
-				attrs = {
-					x1: transformedOrigin.x + bounds.width / 2,
-					y1: (transformedOrigin.y - bounds.height / 2) / 2,
-					x2: transformedDestination.x + bounds.width / 2,
-					y2: (transformedDestination.y - bounds.height / 2) / 2
-				};
+				if (parentItem && parentItem.data.isTextOnPath) {
+					var parentBounds = parentItem ? parentItem.bounds : null;
+
+					var newOriginX = transformedOrigin.x + parentBounds.x;
+					var newOriginY = transformedOrigin.y + parentBounds.y;
+					var newOrigin = item.globalToLocal([newOriginX, newOriginY]);
+
+					var newDestinationX = transformedDestination.x + parentBounds.x;
+					var newDestinationY = transformedDestination.y + parentBounds.y;
+					var newDestination = item.globalToLocal([newDestinationX, newDestinationY]);
+
+					attrs = {
+						x1: newOrigin.x,
+						y1: newOrigin.y,
+						x2: newDestination.x,
+						y2: newDestination.y
+					};
+				} else {
+					attrs = {
+						x1: transformedOrigin.x + myBounds.width / 2,
+						y1: (transformedOrigin.y - myBounds.height / 2) / 2,
+						x2: transformedDestination.x + myBounds.width / 2,
+						y2: (transformedDestination.y - myBounds.height / 2) / 2
+					};
+				}
 			}
 
 			attrs.gradientUnits = 'userSpaceOnUse';
@@ -15290,14 +15709,17 @@ new function () {
 				formatter);
 			node.textContent = item._content;
 			return node;
-		} else if (hasGradients) {
+		} else if (hasGradients && item.fillColor && item.fillColor.gradient) {
 			var attrs = getTransform(item._matrix, false),
 				group = SvgElement.create('g', attrs, formatter)
 
-			var node = SvgElement.create('text', null,
-				formatter);
-
+			var node = SvgElement.create('text', null, formatter);
 			node.textContent = item._content;
+
+			if (item.parent && item.parent.data && item.parent.data.isTextOnPath) {
+				var gradientNode = exportGradient(item.fillColor, item, item.parent);
+				node.setAttribute('fill', gradientNode);
+			}
 
 			group.appendChild(node);
 			return group;
@@ -15419,7 +15841,7 @@ new function () {
 
 			var feComposite = SvgElement.create('feComposite', {
 				in2: 'SourceGraphic',
-				operator: 'atop'
+				operator: 'in'
 			}, formatter);
 
 			filter.appendChild(feImage);
