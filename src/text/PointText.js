@@ -91,11 +91,10 @@ var PointText = TextItem.extend(/** @lends PointText# */{
 
 		for (var i = 0, l = lines.length; i < l; i++) {
 			ctx.shadowColor = shadowColor;
-			ctx.shadowColor = null;
 
 			var line = lines[i];
 
-			if (!this._textureFill && !this.data.textureFillStrokedText) {
+			if (!this._textureFill) {
 				if (hasFill) {
 					ctx.fillText(line, 0, 0);
 					ctx.shadowColor = 'rgba(0,0,0,0)';
@@ -104,16 +103,11 @@ var PointText = TextItem.extend(/** @lends PointText# */{
 				if (hasStroke) {
 					ctx.strokeText(line, 0, 0);
 				}
-			} else if (this.data.textureFillStrokedText) {
+			} /*else if (this.data.textureFillStrokedText) {
 
-				// To allow shadows we need to first render a transparent text
-				// just to render the shadows as they will not work
-				// from the drawImage.
-				if (ctx.shadowColor) {
-					var currentFillColor = ctx.fillColor;
-					ctx.fillColor = 'rgba(0,0,0,0)';
+				// Render the normal text for the shadows
+				if (ctx.shadowColor && ctx.shadowColor !== 'rgba(0,0,0,0)') {
 					ctx.fillText(line, 0, 0);
-					ctx.fillColor = currentFillColor;
 				}
 
 				// Draw a stroke with the text shape as hole
@@ -158,16 +152,15 @@ var PointText = TextItem.extend(/** @lends PointText# */{
 				ctx.translate(-boundingBoxLeft - style.strokeWidth, -bounds.height);
 				// we need to scale it down the main ctx for a moment.
 				ctx.scale(1 / scaling, 1 / scaling);
-				ctx.shadowColor = 'rgba(0,0,0,0)';
 				ctx.drawImage(newCtx.canvas, 0, 0);
 				ctx.scale(scaling, scaling);
 				ctx.translate(0, bounds.height);
 
-			} else {
+			} */     else {
 				var metrics = ctx.measureText(line);
 				var bounds = this._getBounds(null, { actualText: true });
 				const textWidth = bounds.width;
-				var scaling = Math.max(5, textWidth / 50); // Generic good quality for the rendering
+				var scaling = Math.ceil(Math.max(5, textWidth / 50)); // Generic good quality for the rendering
 				var canvasWidth = Math.round(textWidth * scaling);
 				var canvasHeight = Math.round(bounds.height * scaling * 1.5);
 
@@ -178,7 +171,8 @@ var PointText = TextItem.extend(/** @lends PointText# */{
 
 				var newCtx = CanvasProvider.getContext(canvasWidth, canvasHeight);
 				this._setStyles(newCtx, param, viewMatrix);
-				newCtx.shadowColor = null;
+				newCtx.shadowColor = 'rgba(0,0,0,0)';
+				//ctx.shadowColor = 'rgba(0,0,0,0)';
 				newCtx.scale(scaling, scaling);
 				newCtx.translate(0, bounds.height);
 				newCtx.font = ctx.font;
@@ -188,7 +182,7 @@ var PointText = TextItem.extend(/** @lends PointText# */{
 				}
 
 				newCtx.translate(bounds.x, bounds.y);
-				newCtx.globalCompositeOperation = "source-in";
+				newCtx.globalCompositeOperation = "source-atop";
 				var imageRatio = this._textureFill.width / this._textureFill.height;
 
 
@@ -207,13 +201,13 @@ var PointText = TextItem.extend(/** @lends PointText# */{
 					var hasTextHeight = this._textureOptions.hasOwnProperty("textHeight");
 
 					if (hasTextWidth) {
-						widthImage = Math.round(this._textureOptions.textWidth);
-						heightImage = Math.round(widthImage / imageRatio);
+						widthImage = Math.ceil(this._textureOptions.textWidth);
+						heightImage = Math.ceil(widthImage / imageRatio);
 					}
 
 					if (hasTextWidth && hasTextHeight && this._textureOptions.textHeight > this._textureOptions.textWidth) {
-						heightImage = Math.round(this._textureOptions.textHeight);
-						widthImage = Math.round(this._textureOptions.textHeight * imageRatio);
+						heightImage = Math.ceil(this._textureOptions.textHeight);
+						widthImage = Math.ceil(this._textureOptions.textHeight * imageRatio);
 					}
 
 					if (this._textureOptions.hasOwnProperty("offsetLeft")) {
@@ -281,14 +275,9 @@ var PointText = TextItem.extend(/** @lends PointText# */{
 					ctx.translate(-boundingBoxLeft, -bounds.height);
 					// we need to scale it down the main ctx for a moment.
 					ctx.scale(1 / scaling, 1 / scaling);
-					ctx.shadowColor = 'rgba(0,0,0,0)';
 					ctx.drawImage(newCtx.canvas, 0, 0);
 					ctx.scale(scaling, scaling);
 					ctx.translate(0, bounds.height);
-
-					if (hasStroke) {
-						newCtx.strokeText(line, 0, 0);
-					}
 
 					var DEBUG = false;
 
