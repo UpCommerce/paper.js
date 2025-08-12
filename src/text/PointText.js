@@ -91,6 +91,7 @@ var PointText = TextItem.extend(/** @lends PointText# */{
 
 		for (var i = 0, l = lines.length; i < l; i++) {
 			ctx.shadowColor = shadowColor;
+			ctx.shadowColor = null;
 
 			var line = lines[i];
 
@@ -104,9 +105,20 @@ var PointText = TextItem.extend(/** @lends PointText# */{
 					ctx.strokeText(line, 0, 0);
 				}
 			} else if (this.data.textureFillStrokedText) {
+
+				// To allow shadows we need to first render a transparent text
+				// just to render the shadows as they will not work
+				// from the drawImage.
+				if (ctx.shadowColor) {
+					var currentFillColor = ctx.fillColor;
+					ctx.fillColor = 'rgba(0,0,0,0)';
+					ctx.fillText(line, 0, 0);
+					ctx.fillColor = currentFillColor;
+				}
+
 				// Draw a stroke with the text shape as hole
 				var bounds = this._getBounds(null, { actualText: true });
-				const textWidth = bounds.width;
+				const textWidth = bounds.width + style.strokeWidth * 2;
 				var scaling = Math.max(5, textWidth / 50); // GEneric good quality for the rendering
 				var canvasWidth = Math.round(textWidth * scaling);
 				var canvasHeight = Math.round(bounds.height * scaling * 1.5);
@@ -118,9 +130,9 @@ var PointText = TextItem.extend(/** @lends PointText# */{
 
 				var newCtx = CanvasProvider.getContext(canvasWidth, canvasHeight);
 				this._setStyles(newCtx, param, viewMatrix);
-				newCtx.shadowColor = null;
+				newCtx.shadowColor = 'rgba(0,0,0,0)';
 				newCtx.scale(scaling, scaling);
-				newCtx.translate(0, bounds.height);
+				newCtx.translate(style.strokeWidth, bounds.height);
 				newCtx.font = ctx.font;
 
 				if (hasStroke) {
@@ -134,19 +146,24 @@ var PointText = TextItem.extend(/** @lends PointText# */{
 				}
 
 				var metrics = ctx.measureText(line);
-				let boundingBoxLeft = metrics.actualBoundingBoxLeft;
 
 				// newCtx is bigger then the main, so to avoid a double scaling
+				let boundingBoxLeft = metrics.actualBoundingBoxLeft;
+				if (ctx.textAlign == "center") {
+					const halfWidth = metrics.width / 2;
+					boundingBoxLeft = halfWidth;
+					newCtx.translate(halfWidth, 0);
+				}
 
-				ctx.translate(-boundingBoxLeft, -bounds.height);
+				ctx.translate(-boundingBoxLeft - style.strokeWidth, -bounds.height);
 				// we need to scale it down the main ctx for a moment.
 				ctx.scale(1 / scaling, 1 / scaling);
+				ctx.shadowColor = 'rgba(0,0,0,0)';
 				ctx.drawImage(newCtx.canvas, 0, 0);
 				ctx.scale(scaling, scaling);
 				ctx.translate(0, bounds.height);
 
 			} else {
-
 				var metrics = ctx.measureText(line);
 				var bounds = this._getBounds(null, { actualText: true });
 				const textWidth = bounds.width;
@@ -264,6 +281,7 @@ var PointText = TextItem.extend(/** @lends PointText# */{
 					ctx.translate(-boundingBoxLeft, -bounds.height);
 					// we need to scale it down the main ctx for a moment.
 					ctx.scale(1 / scaling, 1 / scaling);
+					ctx.shadowColor = 'rgba(0,0,0,0)';
 					ctx.drawImage(newCtx.canvas, 0, 0);
 					ctx.scale(scaling, scaling);
 					ctx.translate(0, bounds.height);
