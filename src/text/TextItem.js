@@ -74,6 +74,7 @@ var TextItem = Item.extend(/** @lends TextItem# */{
         this._content = '';
         this._lines = [];
         this._textureFill = null;
+        this._textureFillUrl = null;
         this._loaded = false;
         this._textureOptions = null;
         // Support two forms of item initialization: Passing one object literal
@@ -144,7 +145,7 @@ var TextItem = Item.extend(/** @lends TextItem# */{
     },
 
     getTextureFill: function () {
-        return this._textureFill ? this._textureFill.src : null;
+        return this._textureFillUrl;
     },
 
     setTextureFill: function (url) {
@@ -155,6 +156,8 @@ var TextItem = Item.extend(/** @lends TextItem# */{
             that._textureFill = null;
             this._changed(/*#=*/Change.STYLE);
         }
+
+        this._textureFillUrl = url;
 
         if (url) {
             function emit(event) {
