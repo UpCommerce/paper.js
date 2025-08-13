@@ -263,7 +263,7 @@ var PointText = TextItem.extend(/** @lends PointText# */{
 				}
 
 				if (widthImage > 0 && heightImage > 0 && bounds.height > 0) {
-					let boundingBoxLeft = metrics.actualBoundingBoxLeft;
+					let boundingBoxLeft = 0;
 					if (ctx.textAlign == "center") {
 						const halfWidth = metrics.width / 2;
 						boundingBoxLeft = halfWidth;
