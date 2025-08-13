@@ -27,9 +27,18 @@ var CanvasProvider = Base.exports.CanvasProvider = {
         }
 
         // Check if we have a cached canvas of the right size
-        var sizeKey = width + 'x' + height;
         if (this.canvases.length) {
-            canvas = this.canvases.pop();
+            for (var i = 0; i < this.canvases.length; i++) {
+                if (this.canvases[i].width === width && this.canvases[i].height === height) {
+                    canvas = this.canvases[i];
+                    this.canvases.splice(i, 1);
+                    break;
+                }
+            }
+
+            if (!canvas) {
+                canvas = this.canvases.pop();
+            }
         } else {
             canvas = document.createElement('canvas');
             clear = false; // It's already cleared through createElement().
