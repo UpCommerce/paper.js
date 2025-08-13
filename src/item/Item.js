@@ -1726,7 +1726,7 @@ var Item = Base.extend(Emitter, /** @lends Item# */{
         // meaning the default value has been overwritten (default is on
         // prototype).
         var keys = ['_locked', '_visible', '_blendMode', '_opacity',
-                '_clipMask', '_guide', '_enhanceBlendMode', '_textureFill', '_textureUrl', '_loaded']; // Matteo - aggiunto enhanceBlendMode
+                '_clipMask', '_guide', '_enhanceBlendMode', '_fillImage', '_fillImageUrl', '_loaded']; // Matteo - aggiunto enhanceBlendMode
         for (var i = 0, l = keys.length; i < l; i++) {
             var key = keys[i];
             if (source.hasOwnProperty(key))
