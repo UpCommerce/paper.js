@@ -289,6 +289,8 @@ var PointText = TextItem.extend(/** @lends PointText# */{
 						newCtx.canvas.style.zIndex = '1000';
 						CanvasProvider.release(newCtx);
 					}
+
+					CanvasProvider.release(newCtx);
 				}
 			}
 

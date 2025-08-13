@@ -9,7 +9,7 @@
  *
  * All rights reserved.
  *
- * Date: Mon Aug 11 17:16:28 2025 +0200
+ * Date: Tue Aug 12 20:43:21 2025 +0200
  *
  ***
  *
@@ -3889,7 +3889,7 @@ var Item = Base.extend(Emitter, {
 		copyAttributes: function (source, excludeMatrix) {
 		this.setStyle(source._style);
 		var keys = ['_locked', '_visible', '_blendMode', '_opacity',
-				'_clipMask', '_guide', '_enhanceBlendMode'];
+				'_clipMask', '_guide', '_enhanceBlendMode', '_textureFill', '_textureUrl', '_loaded'];
 		for (var i = 0, l = keys.length; i < l; i++) {
 			var key = keys[i];
 			if (source.hasOwnProperty(key))
@@ -11824,6 +11824,7 @@ var TextItem = Item.extend({
 		this._content = '';
 		this._lines = [];
 		this._textureFill = null;
+		this._textureFillUrl = null;
 		this._loaded = false;
 		this._textureOptions = null;
 		var hasProps = arg && Base.isPlainObject(arg)
@@ -11858,7 +11859,7 @@ var TextItem = Item.extend({
 	},
 
 	getTextureFill: function () {
-		return this._textureFill ? this._textureFill.src : null;
+		return this._textureFillUrl;
 	},
 
 	setTextureFill: function (url) {
@@ -11869,6 +11870,8 @@ var TextItem = Item.extend({
 			that._textureFill = null;
 			this._changed(129);
 		}
+
+		this._textureFillUrl = url;
 
 		if (url) {
 			function emit(event) {
@@ -11965,7 +11968,7 @@ var PointText = TextItem.extend({
 
 			var line = lines[i];
 
-			if (!this._textureFill && !this.data.textureFillStrokedText) {
+			if (!this._textureFill) {
 				if (hasFill) {
 					ctx.fillText(line, 0, 0);
 					ctx.shadowColor = 'rgba(0,0,0,0)';
@@ -11974,10 +11977,11 @@ var PointText = TextItem.extend({
 				if (hasStroke) {
 					ctx.strokeText(line, 0, 0);
 				}
-			} else if (this.data.textureFillStrokedText) {
+			}      else {
+				var metrics = ctx.measureText(line);
 				var bounds = this._getBounds(null, { actualText: true });
 				const textWidth = bounds.width;
-				var scaling = Math.max(5, textWidth / 50);
+				var scaling = Math.ceil(Math.max(5, textWidth / 50));
 				var canvasWidth = Math.round(textWidth * scaling);
 				var canvasHeight = Math.round(bounds.height * scaling * 1.5);
 
@@ -11987,46 +11991,7 @@ var PointText = TextItem.extend({
 
 				var newCtx = CanvasProvider.getContext(canvasWidth, canvasHeight);
 				this._setStyles(newCtx, param, viewMatrix);
-				newCtx.shadowColor = null;
-				newCtx.scale(scaling, scaling);
-				newCtx.translate(0, bounds.height);
-				newCtx.font = ctx.font;
-
-				if (hasStroke) {
-					newCtx.strokeText(line, 0, 0);
-				}
-
-				newCtx.globalCompositeOperation = "destination-out";
-
-				if (hasFill) {
-					newCtx.fillText(line, 0, 0);
-				}
-
-				var metrics = ctx.measureText(line);
-				let boundingBoxLeft = metrics.actualBoundingBoxLeft;
-
-				ctx.translate(-boundingBoxLeft, -bounds.height);
-				ctx.scale(1 / scaling, 1 / scaling);
-				ctx.drawImage(newCtx.canvas, 0, 0);
-				ctx.scale(scaling, scaling);
-				ctx.translate(0, bounds.height);
-
-			} else {
-
-				var metrics = ctx.measureText(line);
-				var bounds = this._getBounds(null, { actualText: true });
-				const textWidth = bounds.width;
-				var scaling = Math.max(5, textWidth / 50);
-				var canvasWidth = Math.round(textWidth * scaling);
-				var canvasHeight = Math.round(bounds.height * scaling * 1.5);
-
-				if (canvasWidth <= 0 || canvasHeight <= 0) {
-					continue;
-				}
-
-				var newCtx = CanvasProvider.getContext(canvasWidth, canvasHeight);
-				this._setStyles(newCtx, param, viewMatrix);
-				newCtx.shadowColor = null;
+				newCtx.shadowColor = 'rgba(0,0,0,0)';
 				newCtx.scale(scaling, scaling);
 				newCtx.translate(0, bounds.height);
 				newCtx.font = ctx.font;
@@ -12036,7 +12001,7 @@ var PointText = TextItem.extend({
 				}
 
 				newCtx.translate(bounds.x, bounds.y);
-				newCtx.globalCompositeOperation = "source-in";
+				newCtx.globalCompositeOperation = "source-atop";
 				var imageRatio = this._textureFill.width / this._textureFill.height;
 
 				var leftImage = 0;
@@ -12054,13 +12019,13 @@ var PointText = TextItem.extend({
 					var hasTextHeight = this._textureOptions.hasOwnProperty("textHeight");
 
 					if (hasTextWidth) {
-						widthImage = Math.round(this._textureOptions.textWidth);
-						heightImage = Math.round(widthImage / imageRatio);
+						widthImage = Math.ceil(this._textureOptions.textWidth);
+						heightImage = Math.ceil(widthImage / imageRatio);
 					}
 
 					if (hasTextWidth && hasTextHeight && this._textureOptions.textHeight > this._textureOptions.textWidth) {
-						heightImage = Math.round(this._textureOptions.textHeight);
-						widthImage = Math.round(this._textureOptions.textHeight * imageRatio);
+						heightImage = Math.ceil(this._textureOptions.textHeight);
+						widthImage = Math.ceil(this._textureOptions.textHeight * imageRatio);
 					}
 
 					if (this._textureOptions.hasOwnProperty("offsetLeft")) {
@@ -12129,10 +12094,6 @@ var PointText = TextItem.extend({
 					ctx.scale(scaling, scaling);
 					ctx.translate(0, bounds.height);
 
-					if (hasStroke) {
-						newCtx.strokeText(line, 0, 0);
-					}
-
 					var DEBUG = false;
 
 					if (DEBUG) {
@@ -12143,6 +12104,8 @@ var PointText = TextItem.extend({
 						newCtx.canvas.style.zIndex = '1000';
 						CanvasProvider.release(newCtx);
 					}
+
+					CanvasProvider.release(newCtx);
 				}
 			}
 
@@ -14920,9 +14883,18 @@ var CanvasProvider = Base.exports.CanvasProvider = {
 			width = width.width;
 		}
 
-		var sizeKey = width + 'x' + height;
 		if (this.canvases.length) {
-			canvas = this.canvases.pop();
+			for (var i = 0; i < this.canvases.length; i++) {
+				if (this.canvases[i].width === width && this.canvases[i].height === height) {
+					canvas = this.canvases[i];
+					this.canvases.splice(i, 1);
+					break;
+				}
+			}
+
+			if (!canvas) {
+				canvas = this.canvases.pop();
+			}
 		} else {
 			canvas = document.createElement('canvas');
 			clear = false;
@@ -15574,7 +15546,7 @@ new function () {
 
 			var feComposite = SvgElement.create('feComposite', {
 				in2: 'SourceGraphic',
-				operator: 'in'
+				operator: 'atop'
 			}, formatter);
 
 			filter.appendChild(feImage);
@@ -15844,7 +15816,7 @@ new function () {
 
 			var feComposite = SvgElement.create('feComposite', {
 				in2: 'SourceGraphic',
-				operator: 'in'
+				operator: 'atop'
 			}, formatter);
 
 			filter.appendChild(feImage);
