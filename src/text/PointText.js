@@ -94,7 +94,7 @@ var PointText = TextItem.extend(/** @lends PointText# */{
 
 			var line = lines[i];
 
-			if (!this._textureFill) {
+			if (!this._fillImage) {
 				if (hasFill) {
 					ctx.fillText(line, 0, 0);
 					ctx.shadowColor = 'rgba(0,0,0,0)';
@@ -103,7 +103,7 @@ var PointText = TextItem.extend(/** @lends PointText# */{
 				if (hasStroke) {
 					ctx.strokeText(line, 0, 0);
 				}
-			} /*else if (this.data.textureFillStrokedText) {
+			} /*else if (this.data.fillImageStrokedText) {
 
 				// Render the normal text for the shadows
 				if (ctx.shadowColor && ctx.shadowColor !== 'rgba(0,0,0,0)') {
@@ -183,7 +183,7 @@ var PointText = TextItem.extend(/** @lends PointText# */{
 
 				newCtx.translate(bounds.x, bounds.y);
 				newCtx.globalCompositeOperation = "source-atop";
-				var imageRatio = this._textureFill.width / this._textureFill.height;
+				var imageRatio = this._fillImage.width / this._fillImage.height;
 
 
 				var leftImage = 0;
@@ -196,66 +196,66 @@ var PointText = TextItem.extend(/** @lends PointText# */{
 					widthImage = bounds.height * imageRatio;
 				}
 
-				if (this._textureOptions && widthImage > 0 && heightImage > 0) {
-					var hasTextWidth = this._textureOptions.hasOwnProperty("textWidth");
-					var hasTextHeight = this._textureOptions.hasOwnProperty("textHeight");
+				if (this._fillImageSettings && widthImage > 0 && heightImage > 0) {
+					var hasTextWidth = this._fillImageSettings.hasOwnProperty("textWidth");
+					var hasTextHeight = this._fillImageSettings.hasOwnProperty("textHeight");
 
 					if (hasTextWidth) {
-						widthImage = Math.ceil(this._textureOptions.textWidth);
+						widthImage = Math.ceil(this._fillImageSettings.textWidth);
 						heightImage = Math.ceil(widthImage / imageRatio);
 					}
 
-					if (hasTextWidth && hasTextHeight && this._textureOptions.textHeight > this._textureOptions.textWidth) {
-						heightImage = Math.ceil(this._textureOptions.textHeight);
-						widthImage = Math.ceil(this._textureOptions.textHeight * imageRatio);
+					if (hasTextWidth && hasTextHeight && this._fillImageSettings.textHeight > this._fillImageSettings.textWidth) {
+						heightImage = Math.ceil(this._fillImageSettings.textHeight);
+						widthImage = Math.ceil(this._fillImageSettings.textHeight * imageRatio);
 					}
 
-					if (this._textureOptions.hasOwnProperty("offsetLeft")) {
-						leftImage = -this._textureOptions.offsetLeft;
+					if (this._fillImageSettings.hasOwnProperty("offsetLeft")) {
+						leftImage = -this._fillImageSettings.offsetLeft;
 					}
-					if (this._textureOptions.hasOwnProperty("offsetTop")) {
-						topImage = -this._textureOptions.offsetTop;
+					if (this._fillImageSettings.hasOwnProperty("offsetTop")) {
+						topImage = -this._fillImageSettings.offsetTop;
 					}
 
-					if (this._textureOptions.syncRatio) {
-						if (this._textureOptions.hasOwnProperty("scaling")) {
-							widthImage *= this._textureOptions.scaling;
-							heightImage *= this._textureOptions.scaling;
+					if (this._fillImageSettings.syncRatio) {
+						if (this._fillImageSettings.hasOwnProperty("scaling")) {
+							widthImage *= this._fillImageSettings.scaling;
+							heightImage *= this._fillImageSettings.scaling;
 						}
 					} else {
-						if (this._textureOptions.hasOwnProperty("scalingX")) {
-							widthImage *= this._textureOptions.scalingX;
+						if (this._fillImageSettings.hasOwnProperty("scalingX")) {
+							widthImage *= this._fillImageSettings.scalingX;
 						}
-						if (this._textureOptions.hasOwnProperty("scalingY")) {
-							heightImage *= this._textureOptions.scalingY;
+						if (this._fillImageSettings.hasOwnProperty("scalingY")) {
+							heightImage *= this._fillImageSettings.scalingY;
 						}
 					}
 
 
-					if (this._textureOptions.hasOwnProperty("leftPosition")) {
-						leftImage += this._textureOptions.leftPosition;
+					if (this._fillImageSettings.hasOwnProperty("leftPosition")) {
+						leftImage += this._fillImageSettings.leftPosition;
 					}
-					if (this._textureOptions.hasOwnProperty("topPosition")) {
-						topImage -= this._textureOptions.topPosition;
+					if (this._fillImageSettings.hasOwnProperty("topPosition")) {
+						topImage -= this._fillImageSettings.topPosition;
 					}
 				}
 
 				newCtx.translate(leftImage, topImage);
 
-				if (this._textureOptions && widthImage > 0 && heightImage > 0) {
+				if (this._fillImageSettings && widthImage > 0 && heightImage > 0) {
 
-					if (this._textureOptions.horizontalFlip) {
+					if (this._fillImageSettings.horizontalFlip) {
 						newCtx.translate(widthImage, 0);
 						newCtx.scale(-1, 1);
 					}
-					if (this._textureOptions.verticalFlip) {
+					if (this._fillImageSettings.verticalFlip) {
 						newCtx.translate(0, heightImage);
 						newCtx.scale(1, -1);
 					}
 
-					if (this._textureOptions.hasOwnProperty("rotation")) {
+					if (this._fillImageSettings.hasOwnProperty("rotation")) {
 						newCtx.translate(widthImage / 2, heightImage / 2);
-						var radiants = (this._textureOptions.rotation * Math.PI) / 180;
+						var radiants = (this._fillImageSettings.rotation * Math.PI) / 180;
 						newCtx.rotate(radiants);
 						newCtx.translate(-widthImage / 2, -heightImage / 2);
 					}
@@ -269,7 +269,7 @@ var PointText = TextItem.extend(/** @lends PointText# */{
 						boundingBoxLeft = halfWidth;
 						newCtx.translate(halfWidth, 0);
 					}
-					newCtx.drawImage(this._textureFill, 0, 0, widthImage, heightImage);
+					newCtx.drawImage(this._fillImage, 0, 0, widthImage, heightImage);
 					// newCtx is bigger then the main, so to avoid a double scaling
 
 					ctx.translate(-boundingBoxLeft, -bounds.height);

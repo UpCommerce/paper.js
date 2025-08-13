@@ -183,8 +183,8 @@ var CompoundPath = PathItem.extend(/** @lends CompoundPath# */{
         return this._fillImageSettings;
     },
 
-    setFillImageSettings: function (textureOptions) {
-        this._fillImageSettings = textureOptions;
+    setFillImageSettings: function (fillImageSettings) {
+        this._fillImageSettings = fillImageSettings;
         this._changed(/*#=*/Change.STYLE);
     },
 

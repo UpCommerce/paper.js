@@ -442,7 +442,7 @@ new function () {
 
     function exportText(item) {
         var hasGradients = (item.data && item.data.gradientSettings) || (item.parent && item.parent.data && item.parent.data.gradientSettings);
-        if (!item._textureFill && !hasGradients) {
+        if (!item._fillImage && !hasGradients) {
             var node = SvgElement.create('text', getTransform(item._matrix, true),
                 formatter);
             node.textContent = item._content;
@@ -469,7 +469,7 @@ new function () {
             // This is required for the text to be positioned correctly in the parent group.
             var attrs = getTransform(item._matrix, false),
                 group = SvgElement.create('g', attrs, formatter),
-                textureOptions = item._textureOptions,
+                fillImageSettings = item._fillImageSettings,
                 matrix = item._matrix;
 
             if (item.data && item.data.originalMatrix) {
@@ -485,7 +485,7 @@ new function () {
 
             var bounds = item._getBounds();
 
-            var imageRatio = item._textureFill.naturalWidth / item._textureFill.naturalHeight;
+            var imageRatio = item._fillImage.naturalWidth / item._fillImage.naturalHeight;
 
             // Calculate image dimensions and positioning
             var leftImage = 0;
@@ -498,52 +498,52 @@ new function () {
                 widthImage = bounds.height * imageRatio;
             }
 
-            if (textureOptions && widthImage > 0 && heightImage > 0) {
-                var hasTextWidth = textureOptions.hasOwnProperty("textWidth");
-                var hasTextHeight = textureOptions.hasOwnProperty("textHeight");
+            if (fillImageSettings && widthImage > 0 && heightImage > 0) {
+                var hasTextWidth = fillImageSettings.hasOwnProperty("textWidth");
+                var hasTextHeight = fillImageSettings.hasOwnProperty("textHeight");
 
                 if (hasTextWidth) {
-                    widthImage = Math.round(textureOptions.textWidth);
+                    widthImage = Math.round(fillImageSettings.textWidth);
                     heightImage = Math.round(widthImage / imageRatio);
                 }
 
-                if (hasTextWidth && hasTextHeight && textureOptions.textHeight > textureOptions.textWidth) {
-                    heightImage = Math.round(textureOptions.textHeight);
-                    widthImage = Math.round(textureOptions.textHeight * imageRatio);
+                if (hasTextWidth && hasTextHeight && fillImageSettings.textHeight > fillImageSettings.textWidth) {
+                    heightImage = Math.round(fillImageSettings.textHeight);
+                    widthImage = Math.round(fillImageSettings.textHeight * imageRatio);
                 }
 
-                if (textureOptions.hasOwnProperty("offsetLeft")) {
-                    leftImage = -textureOptions.offsetLeft;
+                if (fillImageSettings.hasOwnProperty("offsetLeft")) {
+                    leftImage = -fillImageSettings.offsetLeft;
                 }
-                if (textureOptions.hasOwnProperty("offsetTop")) {
-                    topImage = -textureOptions.offsetTop;
+                if (fillImageSettings.hasOwnProperty("offsetTop")) {
+                    topImage = -fillImageSettings.offsetTop;
                 }
 
-                if (textureOptions.syncRatio) {
-                    if (textureOptions.hasOwnProperty("scaling")) {
-                        widthImage *= textureOptions.scaling;
-                        heightImage *= textureOptions.scaling;
+                if (fillImageSettings.syncRatio) {
+                    if (fillImageSettings.hasOwnProperty("scaling")) {
+                        widthImage *= fillImageSettings.scaling;
+                        heightImage *= fillImageSettings.scaling;
                     }
                 } else {
-                    if (textureOptions.hasOwnProperty("scalingX")) {
-                        widthImage *= textureOptions.scalingX;
+                    if (fillImageSettings.hasOwnProperty("scalingX")) {
+                        widthImage *= fillImageSettings.scalingX;
                     }
-                    if (textureOptions.hasOwnProperty("scalingY")) {
-                        heightImage *= textureOptions.scalingY;
+                    if (fillImageSettings.hasOwnProperty("scalingY")) {
+                        heightImage *= fillImageSettings.scalingY;
                     }
                 }
 
-                if (textureOptions.hasOwnProperty("leftPosition")) {
-                    leftImage += textureOptions.leftPosition;
+                if (fillImageSettings.hasOwnProperty("leftPosition")) {
+                    leftImage += fillImageSettings.leftPosition;
                 }
-                if (textureOptions.hasOwnProperty("topPosition")) {
-                    topImage -= textureOptions.topPosition;
+                if (fillImageSettings.hasOwnProperty("topPosition")) {
+                    topImage -= fillImageSettings.topPosition;
                 }
             }
 
-            // First add the textureFill image in def
+            // First add the fillImage image in def
             var image = SvgElement.create('image');
-            image.setAttribute('href', item._textureFill.src);
+            image.setAttribute('href', item._fillImage.src);
             image.setAttribute('width', widthImage + 'px');
             image.setAttribute('height', heightImage + 'px');
 
@@ -560,23 +560,23 @@ new function () {
             }, formatter);
 
             // Handle transformations
-            if (textureOptions && widthImage > 0 && heightImage > 0) {
+            if (fillImageSettings && widthImage > 0 && heightImage > 0) {
                 var transforms = [];
 
-                if (textureOptions.horizontalFlip || textureOptions.verticalFlip) {
-                    var scaleX = textureOptions.horizontalFlip ? -1 : 1;
-                    var scaleY = textureOptions.verticalFlip ? -1 : 1;
-                    var translateX = textureOptions.horizontalFlip ? widthImage : 0;
-                    var translateY = textureOptions.verticalFlip ? heightImage : 0;
+                if (fillImageSettings.horizontalFlip || fillImageSettings.verticalFlip) {
+                    var scaleX = fillImageSettings.horizontalFlip ? -1 : 1;
+                    var scaleY = fillImageSettings.verticalFlip ? -1 : 1;
+                    var translateX = fillImageSettings.horizontalFlip ? widthImage : 0;
+                    var translateY = fillImageSettings.verticalFlip ? heightImage : 0;
                     transforms.push('translate(' + translateX + ',' + translateY + ')');
                     transforms.push('scale(' + scaleX + ',' + scaleY + ')');
                 }
 
-                if (textureOptions.hasOwnProperty("rotation")) {
+                if (fillImageSettings.hasOwnProperty("rotation")) {
                     var centerX = widthImage / 2;
                     var centerY = heightImage / 2;
                     transforms.push('translate(' + centerX + ',' + centerY + ')');
-                    transforms.push('rotate(' + textureOptions.rotation + ')');
+                    transforms.push('rotate(' + fillImageSettings.rotation + ')');
                     transforms.push('translate(' + (-centerX) + ',' + (-centerY) + ')');
                 }
 

@@ -63,8 +63,8 @@ var TextItem = Item.extend(/** @lends TextItem# */{
     _canApplyMatrix: false,
     _serializeFields: {
         content: null,
-        textureFill: null,
-        textureOptions: null,
+        fillImage: null,
+        fillImageSettings: null,
     },
     // TextItem doesn't make the distinction between the different bounds,
     // so use the same name for all of them
@@ -73,10 +73,10 @@ var TextItem = Item.extend(/** @lends TextItem# */{
     initialize: function TextItem(arg) {
         this._content = '';
         this._lines = [];
-        this._textureFill = null;
-        this._textureFillUrl = null;
+        this._fillImage = null;
+        this._fillImageUrl = null;
         this._loaded = false;
-        this._textureOptions = null;
+        this._fillImageSettings = null;
         // Support two forms of item initialization: Passing one object literal
         // describing all the different properties to be set, or a point where
         // it should be placed (arg).
@@ -144,20 +144,20 @@ var TextItem = Item.extend(/** @lends TextItem# */{
         this._loaded = loaded;
     },
 
-    getTextureFill: function () {
-        return this._textureFillUrl;
+    getFillImage: function () {
+        return this._fillImageUrl;
     },
 
-    setTextureFill: function (url) {
+    setFillImage: function (url) {
         var that = this;
 
-        if (!url && that._textureFill) {
+        if (!url && that._fillImage) {
             that._loaded = true;
-            that._textureFill = null;
+            that._fillImage = null;
             this._changed(/*#=*/Change.STYLE);
         }
 
-        this._textureFillUrl = url;
+        this._fillImageUrl = url;
 
         if (url) {
             function emit(event) {
@@ -173,7 +173,7 @@ var TextItem = Item.extend(/** @lends TextItem# */{
             var cachedImage = ImageCache.get(url);
             if (cachedImage) {
                 that._loaded = true;
-                that._textureFill = cachedImage;
+                that._fillImage = cachedImage;
                 that._changed(/*#=*/Change.STYLE);
                 // Emit load event for cached image
                 emit({ type: 'load' });
@@ -190,7 +190,7 @@ var TextItem = Item.extend(/** @lends TextItem# */{
             DomEvent.add(image, {
                 load: function (event) {
                     that._loaded = true;
-                    that._textureFill = image;
+                    that._fillImage = image;
                     // Cache the loaded image
                     ImageCache.set(url, image);
                     that._changed(/*#=*/Change.STYLE);
@@ -203,12 +203,12 @@ var TextItem = Item.extend(/** @lends TextItem# */{
         }
     },
 
-    getTextureOptions: function () {
-        return this._textureOptions;
+    getFillImageSettings: function () {
+        return this._fillImageSettings;
     },
 
-    setTextureOptions: function (textureOptions) {
-        this._textureOptions = textureOptions;
+    setFillImageSettings: function (fillImageSettings) {
+        this._fillImageSettings = fillImageSettings;
         this._changed(/*#=*/Change.STYLE);
     },
 
