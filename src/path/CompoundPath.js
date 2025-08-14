@@ -30,7 +30,7 @@ var CompoundPath = PathItem.extend(/** @lends CompoundPath# */{
     _serializeFields: {
         children: [],
         fillImage: null,
-        fillImageSettings:null,
+        fillImageSettings: null,
     },
     // Enforce creation of beans, as bean getters have hidden parameters.
     // See #getPathData() below.
@@ -242,7 +242,7 @@ var CompoundPath = PathItem.extend(/** @lends CompoundPath# */{
      * @type Boolean
      * @see Path#closed
      */
-    isClosed: function() {
+    isClosed: function () {
         var children = this._children;
         for (var i = 0, l = children.length; i < l; i++) {
             if (!children[i]._closed)
@@ -251,7 +251,7 @@ var CompoundPath = PathItem.extend(/** @lends CompoundPath# */{
         return true;
     },
 
-    setClosed: function(closed) {
+    setClosed: function (closed) {
         var children = this._children;
         for (var i = 0, l = children.length; i < l; i++) {
             children[i].setClosed(closed);
@@ -265,7 +265,7 @@ var CompoundPath = PathItem.extend(/** @lends CompoundPath# */{
      * @bean
      * @type Segment
      */
-    getFirstSegment: function() {
+    getFirstSegment: function () {
         var first = this.getFirstChild();
         return first && first.getFirstSegment();
     },
@@ -277,7 +277,7 @@ var CompoundPath = PathItem.extend(/** @lends CompoundPath# */{
      * @bean
      * @type Segment
      */
-    getLastSegment: function() {
+    getLastSegment: function () {
         var last = this.getLastChild();
         return last && last.getLastSegment();
     },
@@ -289,7 +289,7 @@ var CompoundPath = PathItem.extend(/** @lends CompoundPath# */{
      * @bean
      * @type Curve[]
      */
-    getCurves: function() {
+    getCurves: function () {
         var children = this._children,
             curves = [];
         for (var i = 0, l = children.length; i < l; i++) {
@@ -305,7 +305,7 @@ var CompoundPath = PathItem.extend(/** @lends CompoundPath# */{
      * @bean
      * @type Curve
      */
-    getFirstCurve: function() {
+    getFirstCurve: function () {
         var first = this.getFirstChild();
         return first && first.getFirstCurve();
     },
@@ -317,7 +317,7 @@ var CompoundPath = PathItem.extend(/** @lends CompoundPath# */{
      * @bean
      * @type Curve
      */
-    getLastCurve: function() {
+    getLastCurve: function () {
         var last = this.getLastChild();
         return last && last.getLastCurve();
     },
@@ -331,7 +331,7 @@ var CompoundPath = PathItem.extend(/** @lends CompoundPath# */{
      * @bean
      * @type Number
      */
-    getArea: function() {
+    getArea: function () {
         var children = this._children,
             area = 0;
         for (var i = 0, l = children.length; i < l; i++)
@@ -346,7 +346,7 @@ var CompoundPath = PathItem.extend(/** @lends CompoundPath# */{
      * @bean
      * @type Number
      */
-    getLength: function() {
+    getLength: function () {
         var children = this._children,
             length = 0;
         for (var i = 0, l = children.length; i < l; i++)
@@ -354,7 +354,7 @@ var CompoundPath = PathItem.extend(/** @lends CompoundPath# */{
         return length;
     },
 
-    getPathData: function(_matrix, _precision) {
+    getPathData: function (_matrix, _precision) {
         // NOTE: #setPathData() is defined in PathItem.
         var children = this._children,
             paths = [];
@@ -362,23 +362,23 @@ var CompoundPath = PathItem.extend(/** @lends CompoundPath# */{
             var child = children[i],
                 mx = child._matrix;
             paths.push(child.getPathData(_matrix && !mx.isIdentity()
-                    ? _matrix.appended(mx) : _matrix, _precision));
+                ? _matrix.appended(mx) : _matrix, _precision));
         }
         return paths.join('');
     },
 
     _hitTestChildren: function _hitTestChildren(point, options, viewMatrix) {
         return _hitTestChildren.base.call(this, point,
-                // If we're not specifically asked to returns paths through
-                // options.class == Path, do not test children for fill, since a
-                // compound path forms one shape.
-                // Also support legacy format `type: 'path'`.
-                options.class === Path || options.type === 'path' ? options
-                    : Base.set({}, options, { fill: false }),
-                viewMatrix);
+            // If we're not specifically asked to returns paths through
+            // options.class == Path, do not test children for fill, since a
+            // compound path forms one shape.
+            // Also support legacy format `type: 'path'`.
+            options.class === Path || options.type === 'path' ? options
+                : Base.set({}, options, { fill: false }),
+            viewMatrix);
     },
 
-    _draw: function(ctx, param, viewMatrix, strokeMatrix) {
+    _draw: function (ctx, param, viewMatrix, strokeMatrix) {
         var children = this._children;
         // Return early if the compound path doesn't have any children:
         if (!children.length)
@@ -386,7 +386,7 @@ var CompoundPath = PathItem.extend(/** @lends CompoundPath# */{
 
         param = param.extend({ dontStart: true, dontFinish: true });
         ctx.beginPath();
-        for (var i = 0, l = children.length; i < l; i++){
+        for (var i = 0, l = children.length; i < l; i++) {
             children[i].draw(ctx, param, strokeMatrix);
         }
 
@@ -401,134 +401,134 @@ var CompoundPath = PathItem.extend(/** @lends CompoundPath# */{
                 ctx.stroke();
         }
 
-        if(this._fillImage){
-			var bounds = this.bounds;
-			const textWidth = bounds.width;
-			var scaling = Math.max(5, textWidth / 50);
-            
-			var canvasWidth = Math.round(textWidth * scaling);
-			var canvasHeight = Math.round(bounds.height * scaling * 1.5);
+        if (this._fillImage) {
+            var bounds = this.bounds;
+            const textWidth = bounds.width;
+            var scaling = Math.max(5, textWidth / 50);
 
-			if (canvasWidth <= 0 || canvasHeight <= 0) {
-				return;
-			}
+            var canvasWidth = Math.round(textWidth * scaling);
+            var canvasHeight = Math.round(bounds.height * scaling * 1.5);
+
+            if (canvasWidth <= 0 || canvasHeight <= 0) {
+                return;
+            }
             // canvasWidth e canvasHeight creano problemi di performance
             // (va a scatti)
             // 100 valore arbitrario per fare spazio allo stroke (va cambiato)
-			canvasWidth = bounds.width + 100;
-			canvasHeight = bounds.height + 100;
-			var newCtx = CanvasProvider.getContext(canvasWidth, canvasHeight);
+            canvasWidth = bounds.width + 100;
+            canvasHeight = bounds.height + 100;
+            var newCtx = CanvasProvider.getContext(canvasWidth, canvasHeight);
 
-			this._setStyles(newCtx, param, viewMatrix);
+            this._setStyles(newCtx, param, viewMatrix);
 
-			let myTest = () => {
-				return false;
-			}
-			var DEBUG = myTest();
+            let myTest = () => {
+                return false;
+            }
+            var DEBUG = myTest();
 
-			if (DEBUG) {
-				document.body.append(newCtx.canvas);
-				newCtx.canvas.style.position = 'fixed';
-				newCtx.canvas.style.left = '0px';
-				newCtx.canvas.style.top = '0px';
-				newCtx.canvas.style.zIndex = '1000';
+            if (DEBUG) {
+                document.body.append(newCtx.canvas);
+                newCtx.canvas.style.position = 'fixed';
+                newCtx.canvas.style.left = '0px';
+                newCtx.canvas.style.top = '0px';
+                newCtx.canvas.style.zIndex = '1000';
 
-				CanvasProvider.release(newCtx);
-			}
+                CanvasProvider.release(newCtx);
+            }
 
-			var style = this._style;
-			newCtx.shadowColor = null;
-			newCtx.font = ctx.font;
+            var style = this._style;
+            newCtx.shadowColor = null;
+            newCtx.font = ctx.font;
 
-			const positionX = canvasWidth/2 - bounds.center.x;
-			const positionY = canvasHeight/2 - bounds.center.y;
+            const positionX = canvasWidth / 2 - bounds.center.x;
+            const positionY = canvasHeight / 2 - bounds.center.y;
 
-			newCtx.translate(positionX, positionY);
+            newCtx.translate(positionX, positionY);
 
-			for (var i = 0, l = children.length; i < l; i++){
-				const child = children[i];
-				child.draw(newCtx, param, strokeMatrix);
-			}
-			var imageRatio = this._fillImage.width / this._fillImage.height;
+            for (var i = 0, l = children.length; i < l; i++) {
+                const child = children[i];
+                child.draw(newCtx, param, strokeMatrix);
+            }
+            var imageRatio = this._fillImage.width / this._fillImage.height;
 
-			if (style.hasFill()) {
-				newCtx.fill(style.getFillRule());
-				newCtx.shadowColor = 'rgba(0,0,0,0)';
-			}
+            if (style.hasFill()) {
+                newCtx.fill(style.getFillRule());
+                newCtx.shadowColor = 'rgba(0,0,0,0)';
+            }
 
 
-			newCtx.globalCompositeOperation = "source-in";
-			const imagePositionX = -bounds.width/2 + bounds.center.x;
-			const imagePositionY = -bounds.height/2 + bounds.center.y;
-			newCtx.translate(imagePositionX,imagePositionY);
+            newCtx.globalCompositeOperation = "source-atop";
+            const imagePositionX = -bounds.width / 2 + bounds.center.x;
+            const imagePositionY = -bounds.height / 2 + bounds.center.y;
+            newCtx.translate(imagePositionX, imagePositionY);
 
-			let leftImage = 0;
-			let topImage = 0;
-			let widthImage = textWidth;
-			let heightImage = textWidth / imageRatio;
+            let leftImage = 0;
+            let topImage = 0;
+            let widthImage = textWidth;
+            let heightImage = textWidth / imageRatio;
 
-			if (bounds.height > bounds.width) {
-				heightImage = bounds.height;
-				widthImage = bounds.height * imageRatio;
-			}
+            if (bounds.height > bounds.width) {
+                heightImage = bounds.height;
+                widthImage = bounds.height * imageRatio;
+            }
 
-			if (this._fillImageSettings && widthImage > 0 && heightImage > 0) {
-				if (this._fillImageSettings.syncRatio) {
-					if (this._fillImageSettings.hasOwnProperty("scaling")) {
-						widthImage *= this._fillImageSettings.scaling;
-						heightImage *= this._fillImageSettings.scaling;
-					}
-				} else {
-					if (this._fillImageSettings.hasOwnProperty("scalingX")) {
-						widthImage *= this._fillImageSettings.scalingX;
-					}
-					if (this._fillImageSettings.hasOwnProperty("scalingY")) {
-						heightImage *= this._fillImageSettings.scalingY;
-					}
-				}
-				if (this._fillImageSettings.hasOwnProperty("leftPosition")) {
-					leftImage += this._fillImageSettings.leftPosition;
-				}
-				if (this._fillImageSettings.hasOwnProperty("topPosition")) {
-					topImage -= this._fillImageSettings.topPosition;
-				}
-			}
+            if (this._fillImageSettings && widthImage > 0 && heightImage > 0) {
+                if (this._fillImageSettings.syncRatio) {
+                    if (this._fillImageSettings.hasOwnProperty("scaling")) {
+                        widthImage *= this._fillImageSettings.scaling;
+                        heightImage *= this._fillImageSettings.scaling;
+                    }
+                } else {
+                    if (this._fillImageSettings.hasOwnProperty("scalingX")) {
+                        widthImage *= this._fillImageSettings.scalingX;
+                    }
+                    if (this._fillImageSettings.hasOwnProperty("scalingY")) {
+                        heightImage *= this._fillImageSettings.scalingY;
+                    }
+                }
+                if (this._fillImageSettings.hasOwnProperty("leftPosition")) {
+                    leftImage += this._fillImageSettings.leftPosition;
+                }
+                if (this._fillImageSettings.hasOwnProperty("topPosition")) {
+                    topImage -= this._fillImageSettings.topPosition;
+                }
+            }
 
-			newCtx.translate(leftImage, topImage);
+            newCtx.translate(leftImage, topImage);
 
-			if (this._fillImageSettings && widthImage > 0 && heightImage > 0) {
+            if (this._fillImageSettings && widthImage > 0 && heightImage > 0) {
 
-				if (this._fillImageSettings.horizontalFlip) {
-					newCtx.translate(widthImage, 0);
-					newCtx.scale(-1, 1);
-				}
-				if (this._fillImageSettings.verticalFlip) {
-					newCtx.translate(0, heightImage);
-					newCtx.scale(1, -1);
-				}
-				if (this._fillImageSettings.hasOwnProperty("rotation")) {
-					newCtx.translate(widthImage / 2, heightImage / 2);
-					var radiants = (this._fillImageSettings.rotation * Math.PI) / 180;
-					newCtx.rotate(radiants);
-					newCtx.translate(-widthImage / 2, -heightImage / 2);
-				}
-			}
+                if (this._fillImageSettings.horizontalFlip) {
+                    newCtx.translate(widthImage, 0);
+                    newCtx.scale(-1, 1);
+                }
+                if (this._fillImageSettings.verticalFlip) {
+                    newCtx.translate(0, heightImage);
+                    newCtx.scale(1, -1);
+                }
+                if (this._fillImageSettings.hasOwnProperty("rotation")) {
+                    newCtx.translate(widthImage / 2, heightImage / 2);
+                    var radiants = (this._fillImageSettings.rotation * Math.PI) / 180;
+                    newCtx.rotate(radiants);
+                    newCtx.translate(-widthImage / 2, -heightImage / 2);
+                }
+            }
 
-			if (widthImage > 0 && heightImage > 0 && bounds.height > 0) {
-				newCtx.drawImage(this._fillImage, 0, 0, widthImage, heightImage);
-			}
+            if (widthImage > 0 && heightImage > 0 && bounds.height > 0) {
+                newCtx.drawImage(this._fillImage, 0, 0, widthImage, heightImage);
+            }
 
-			newCtx.globalCompositeOperation = "source-over";
+            newCtx.globalCompositeOperation = "source-over";
 
-			if (style.hasStroke()){
-				newCtx.stroke();
-			}
+            if (style.hasStroke()) {
+                newCtx.stroke();
+            }
 
-			ctx.drawImage(newCtx.canvas, -positionX, -positionY);
-		}
+            ctx.drawImage(newCtx.canvas, -positionX, -positionY);
+        }
     },
 
-    _drawSelected: function(ctx, matrix, selectionItems) {
+    _drawSelected: function (ctx, matrix, selectionItems) {
         var children = this._children;
         for (var i = 0, l = children.length; i < l; i++) {
             var child = children[i],
@@ -537,67 +537,67 @@ var CompoundPath = PathItem.extend(/** @lends CompoundPath# */{
             // as it would be drawn twice otherwise.
             if (!selectionItems[child._id]) {
                 child._drawSelected(ctx, mx.isIdentity() ? matrix
-                        : matrix.appended(mx));
+                    : matrix.appended(mx));
             }
         }
     }
 },
-new function() { // Injection scope for PostScript-like drawing functions
-    /**
-     * Helper method that returns the current path and checks if a moveTo()
-     * command is required first.
-     */
-    function getCurrentPath(that, check) {
-        var children = that._children;
-        if (check && !children.length)
-            throw new Error('Use a moveTo() command first');
-        return children[children.length - 1];
-    }
+    new function () { // Injection scope for PostScript-like drawing functions
+        /**
+         * Helper method that returns the current path and checks if a moveTo()
+         * command is required first.
+         */
+        function getCurrentPath(that, check) {
+            var children = that._children;
+            if (check && !children.length)
+                throw new Error('Use a moveTo() command first');
+            return children[children.length - 1];
+        }
 
-    // Redirect all other drawing commands to the current path
-    return Base.each(['lineTo', 'cubicCurveTo', 'quadraticCurveTo', 'curveTo',
+        // Redirect all other drawing commands to the current path
+        return Base.each(['lineTo', 'cubicCurveTo', 'quadraticCurveTo', 'curveTo',
             'arcTo', 'lineBy', 'cubicCurveBy', 'quadraticCurveBy', 'curveBy',
             'arcBy'],
-        function(key) {
-            this[key] = function() {
-                var path = getCurrentPath(this, true);
-                path[key].apply(path, arguments);
-            };
-        }, {
+            function (key) {
+                this[key] = function () {
+                    var path = getCurrentPath(this, true);
+                    path[key].apply(path, arguments);
+                };
+            }, {
             // NOTE: Documentation for these methods is found in PathItem, as
             // they are considered abstract methods of PathItem and need to be
             // defined in all implementing classes.
-            moveTo: function(/* point */) {
+                moveTo: function (/* point */) {
                 var current = getCurrentPath(this),
                     // Reuse current path if nothing was added yet
                     path = current && current.isEmpty() ? current
-                            : new Path(Item.NO_INSERT);
+                        : new Path(Item.NO_INSERT);
                 if (path !== current)
                     this.addChild(path);
                 path.moveTo.apply(path, arguments);
             },
 
-            moveBy: function(/* point */) {
+                moveBy: function (/* point */) {
                 var current = getCurrentPath(this, true),
                     last = current && current.getLastSegment(),
                     point = Point.read(arguments);
                 this.moveTo(last ? point.add(last._point) : point);
             },
 
-            closePath: function(tolerance) {
+                closePath: function (tolerance) {
                 getCurrentPath(this, true).closePath(tolerance);
             }
         }
-    );
-}, Base.each(['reverse', 'flatten', 'simplify', 'smooth'], function(key) {
+        );
+    }, Base.each(['reverse', 'flatten', 'simplify', 'smooth'], function (key) {
     // Injection scope for methods forwarded to the child paths.
     // NOTE: Documentation is in PathItem
-    this[key] = function(param) {
-        var children = this._children,
-            res;
-        for (var i = 0, l = children.length; i < l; i++) {
-            res = children[i][key](param) || res;
-        }
-        return res;
-    };
-}, {}));
+        this[key] = function (param) {
+            var children = this._children,
+                res;
+            for (var i = 0, l = children.length; i < l; i++) {
+                res = children[i][key](param) || res;
+            }
+            return res;
+        };
+    }, {}));

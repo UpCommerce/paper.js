@@ -9,7 +9,7 @@
  *
  * All rights reserved.
  *
- * Date: Tue Aug 12 20:43:21 2025 +0200
+ * Date: Wed Aug 13 17:08:32 2025 +0200
  *
  ***
  *
@@ -3889,7 +3889,7 @@ var Item = Base.extend(Emitter, {
 		copyAttributes: function (source, excludeMatrix) {
 		this.setStyle(source._style);
 		var keys = ['_locked', '_visible', '_blendMode', '_opacity',
-				'_clipMask', '_guide', '_enhanceBlendMode', '_textureFill', '_textureUrl', '_loaded'];
+				'_clipMask', '_guide', '_enhanceBlendMode', '_fillImage', '_fillImageUrl', '_loaded'];
 		for (var i = 0, l = keys.length; i < l; i++) {
 			var key = keys[i];
 			if (source.hasOwnProperty(key))
@@ -10239,8 +10239,8 @@ var CompoundPath = PathItem.extend({
 		return this._fillImageSettings;
 	},
 
-	setFillImageSettings: function (textureOptions) {
-		this._fillImageSettings = textureOptions;
+	setFillImageSettings: function (fillImageSettings) {
+		this._fillImageSettings = fillImageSettings;
 		this._changed(129);
 	},
 
@@ -10433,7 +10433,7 @@ var CompoundPath = PathItem.extend({
 				newCtx.shadowColor = 'rgba(0,0,0,0)';
 			}
 
-			newCtx.globalCompositeOperation = "source-in";
+			newCtx.globalCompositeOperation = "source-atop";
 			const imagePositionX = -bounds.width/2 + bounds.center.x;
 			const imagePositionY = -bounds.height/2 + bounds.center.y;
 			newCtx.translate(imagePositionX,imagePositionY);
@@ -11815,18 +11815,18 @@ var TextItem = Item.extend({
 	_canApplyMatrix: false,
 	_serializeFields: {
 		content: null,
-		textureFill: null,
-		textureOptions: null,
+		fillImage: null,
+		fillImageSettings: null,
 	},
 	_boundsOptions: { stroke: false, handle: false },
 
 	initialize: function TextItem(arg) {
 		this._content = '';
 		this._lines = [];
-		this._textureFill = null;
-		this._textureFillUrl = null;
+		this._fillImage = null;
+		this._fillImageUrl = null;
 		this._loaded = false;
-		this._textureOptions = null;
+		this._fillImageSettings = null;
 		var hasProps = arg && Base.isPlainObject(arg)
 			&& arg.x === undefined && arg.y === undefined;
 		this._initialize(hasProps && arg, !hasProps && Point.read(arguments));
@@ -11858,20 +11858,20 @@ var TextItem = Item.extend({
 		this._loaded = loaded;
 	},
 
-	getTextureFill: function () {
-		return this._textureFillUrl;
+	getFillImage: function () {
+		return this._fillImageUrl;
 	},
 
-	setTextureFill: function (url) {
+	setFillImage: function (url) {
 		var that = this;
 
-		if (!url && that._textureFill) {
+		if (!url && that._fillImage) {
 			that._loaded = true;
-			that._textureFill = null;
+			that._fillImage = null;
 			this._changed(129);
 		}
 
-		this._textureFillUrl = url;
+		this._fillImageUrl = url;
 
 		if (url) {
 			function emit(event) {
@@ -11886,7 +11886,7 @@ var TextItem = Item.extend({
 			var cachedImage = ImageCache.get(url);
 			if (cachedImage) {
 				that._loaded = true;
-				that._textureFill = cachedImage;
+				that._fillImage = cachedImage;
 				that._changed(129);
 				emit({ type: 'load' });
 				return;
@@ -11901,7 +11901,7 @@ var TextItem = Item.extend({
 			DomEvent.add(image, {
 				load: function (event) {
 					that._loaded = true;
-					that._textureFill = image;
+					that._fillImage = image;
 					ImageCache.set(url, image);
 					that._changed(129);
 					emit(event);
@@ -11913,12 +11913,12 @@ var TextItem = Item.extend({
 		}
 	},
 
-	getTextureOptions: function () {
-		return this._textureOptions;
+	getFillImageSettings: function () {
+		return this._fillImageSettings;
 	},
 
-	setTextureOptions: function (textureOptions) {
-		this._textureOptions = textureOptions;
+	setFillImageSettings: function (fillImageSettings) {
+		this._fillImageSettings = fillImageSettings;
 		this._changed(129);
 	},
 
@@ -11968,7 +11968,7 @@ var PointText = TextItem.extend({
 
 			var line = lines[i];
 
-			if (!this._textureFill) {
+			if (!this._fillImage) {
 				if (hasFill) {
 					ctx.fillText(line, 0, 0);
 					ctx.shadowColor = 'rgba(0,0,0,0)';
@@ -12002,7 +12002,7 @@ var PointText = TextItem.extend({
 
 				newCtx.translate(bounds.x, bounds.y);
 				newCtx.globalCompositeOperation = "source-atop";
-				var imageRatio = this._textureFill.width / this._textureFill.height;
+				var imageRatio = this._fillImage.width / this._fillImage.height;
 
 				var leftImage = 0;
 				var topImage = 0;
@@ -12014,65 +12014,65 @@ var PointText = TextItem.extend({
 					widthImage = bounds.height * imageRatio;
 				}
 
-				if (this._textureOptions && widthImage > 0 && heightImage > 0) {
-					var hasTextWidth = this._textureOptions.hasOwnProperty("textWidth");
-					var hasTextHeight = this._textureOptions.hasOwnProperty("textHeight");
+				if (this._fillImageSettings && widthImage > 0 && heightImage > 0) {
+					var hasTextWidth = this._fillImageSettings.hasOwnProperty("textWidth");
+					var hasTextHeight = this._fillImageSettings.hasOwnProperty("textHeight");
 
 					if (hasTextWidth) {
-						widthImage = Math.ceil(this._textureOptions.textWidth);
+						widthImage = Math.ceil(this._fillImageSettings.textWidth);
 						heightImage = Math.ceil(widthImage / imageRatio);
 					}
 
-					if (hasTextWidth && hasTextHeight && this._textureOptions.textHeight > this._textureOptions.textWidth) {
-						heightImage = Math.ceil(this._textureOptions.textHeight);
-						widthImage = Math.ceil(this._textureOptions.textHeight * imageRatio);
+					if (hasTextWidth && hasTextHeight && this._fillImageSettings.textHeight > this._fillImageSettings.textWidth) {
+						heightImage = Math.ceil(this._fillImageSettings.textHeight);
+						widthImage = Math.ceil(this._fillImageSettings.textHeight * imageRatio);
 					}
 
-					if (this._textureOptions.hasOwnProperty("offsetLeft")) {
-						leftImage = -this._textureOptions.offsetLeft;
+					if (this._fillImageSettings.hasOwnProperty("offsetLeft")) {
+						leftImage = -this._fillImageSettings.offsetLeft;
 					}
-					if (this._textureOptions.hasOwnProperty("offsetTop")) {
-						topImage = -this._textureOptions.offsetTop;
+					if (this._fillImageSettings.hasOwnProperty("offsetTop")) {
+						topImage = -this._fillImageSettings.offsetTop;
 					}
 
-					if (this._textureOptions.syncRatio) {
-						if (this._textureOptions.hasOwnProperty("scaling")) {
-							widthImage *= this._textureOptions.scaling;
-							heightImage *= this._textureOptions.scaling;
+					if (this._fillImageSettings.syncRatio) {
+						if (this._fillImageSettings.hasOwnProperty("scaling")) {
+							widthImage *= this._fillImageSettings.scaling;
+							heightImage *= this._fillImageSettings.scaling;
 						}
 					} else {
-						if (this._textureOptions.hasOwnProperty("scalingX")) {
-							widthImage *= this._textureOptions.scalingX;
+						if (this._fillImageSettings.hasOwnProperty("scalingX")) {
+							widthImage *= this._fillImageSettings.scalingX;
 						}
-						if (this._textureOptions.hasOwnProperty("scalingY")) {
-							heightImage *= this._textureOptions.scalingY;
+						if (this._fillImageSettings.hasOwnProperty("scalingY")) {
+							heightImage *= this._fillImageSettings.scalingY;
 						}
 					}
 
-					if (this._textureOptions.hasOwnProperty("leftPosition")) {
-						leftImage += this._textureOptions.leftPosition;
+					if (this._fillImageSettings.hasOwnProperty("leftPosition")) {
+						leftImage += this._fillImageSettings.leftPosition;
 					}
-					if (this._textureOptions.hasOwnProperty("topPosition")) {
-						topImage -= this._textureOptions.topPosition;
+					if (this._fillImageSettings.hasOwnProperty("topPosition")) {
+						topImage -= this._fillImageSettings.topPosition;
 					}
 				}
 
 				newCtx.translate(leftImage, topImage);
 
-				if (this._textureOptions && widthImage > 0 && heightImage > 0) {
+				if (this._fillImageSettings && widthImage > 0 && heightImage > 0) {
 
-					if (this._textureOptions.horizontalFlip) {
+					if (this._fillImageSettings.horizontalFlip) {
 						newCtx.translate(widthImage, 0);
 						newCtx.scale(-1, 1);
 					}
-					if (this._textureOptions.verticalFlip) {
+					if (this._fillImageSettings.verticalFlip) {
 						newCtx.translate(0, heightImage);
 						newCtx.scale(1, -1);
 					}
 
-					if (this._textureOptions.hasOwnProperty("rotation")) {
+					if (this._fillImageSettings.hasOwnProperty("rotation")) {
 						newCtx.translate(widthImage / 2, heightImage / 2);
-						var radiants = (this._textureOptions.rotation * Math.PI) / 180;
+						var radiants = (this._fillImageSettings.rotation * Math.PI) / 180;
 						newCtx.rotate(radiants);
 						newCtx.translate(-widthImage / 2, -heightImage / 2);
 					}
@@ -12080,13 +12080,13 @@ var PointText = TextItem.extend({
 				}
 
 				if (widthImage > 0 && heightImage > 0 && bounds.height > 0) {
-					let boundingBoxLeft = metrics.actualBoundingBoxLeft;
+					let boundingBoxLeft = 0;
 					if (ctx.textAlign == "center") {
 						const halfWidth = metrics.width / 2;
 						boundingBoxLeft = halfWidth;
 						newCtx.translate(halfWidth, 0);
 					}
-					newCtx.drawImage(this._textureFill, 0, 0, widthImage, heightImage);
+					newCtx.drawImage(this._fillImage, 0, 0, widthImage, heightImage);
 
 					ctx.translate(-boundingBoxLeft, -bounds.height);
 					ctx.scale(1 / scaling, 1 / scaling);
@@ -15679,7 +15679,7 @@ new function () {
 
 	function exportText(item) {
 		var hasGradients = (item.data && item.data.gradientSettings) || (item.parent && item.parent.data && item.parent.data.gradientSettings);
-		if (!item._textureFill && !hasGradients) {
+		if (!item._fillImage && !hasGradients) {
 			var node = SvgElement.create('text', getTransform(item._matrix, true),
 				formatter);
 			node.textContent = item._content;
@@ -15701,7 +15701,7 @@ new function () {
 		} else {
 			var attrs = getTransform(item._matrix, false),
 				group = SvgElement.create('g', attrs, formatter),
-				textureOptions = item._textureOptions,
+				fillImageSettings = item._fillImageSettings,
 				matrix = item._matrix;
 
 			if (item.data && item.data.originalMatrix) {
@@ -15717,7 +15717,7 @@ new function () {
 
 			var bounds = item._getBounds();
 
-			var imageRatio = item._textureFill.naturalWidth / item._textureFill.naturalHeight;
+			var imageRatio = item._fillImage.naturalWidth / item._fillImage.naturalHeight;
 
 			var leftImage = 0;
 			var topImage = 0;
@@ -15729,51 +15729,51 @@ new function () {
 				widthImage = bounds.height * imageRatio;
 			}
 
-			if (textureOptions && widthImage > 0 && heightImage > 0) {
-				var hasTextWidth = textureOptions.hasOwnProperty("textWidth");
-				var hasTextHeight = textureOptions.hasOwnProperty("textHeight");
+			if (fillImageSettings && widthImage > 0 && heightImage > 0) {
+				var hasTextWidth = fillImageSettings.hasOwnProperty("textWidth");
+				var hasTextHeight = fillImageSettings.hasOwnProperty("textHeight");
 
 				if (hasTextWidth) {
-					widthImage = Math.round(textureOptions.textWidth);
+					widthImage = Math.round(fillImageSettings.textWidth);
 					heightImage = Math.round(widthImage / imageRatio);
 				}
 
-				if (hasTextWidth && hasTextHeight && textureOptions.textHeight > textureOptions.textWidth) {
-					heightImage = Math.round(textureOptions.textHeight);
-					widthImage = Math.round(textureOptions.textHeight * imageRatio);
+				if (hasTextWidth && hasTextHeight && fillImageSettings.textHeight > fillImageSettings.textWidth) {
+					heightImage = Math.round(fillImageSettings.textHeight);
+					widthImage = Math.round(fillImageSettings.textHeight * imageRatio);
 				}
 
-				if (textureOptions.hasOwnProperty("offsetLeft")) {
-					leftImage = -textureOptions.offsetLeft;
+				if (fillImageSettings.hasOwnProperty("offsetLeft")) {
+					leftImage = -fillImageSettings.offsetLeft;
 				}
-				if (textureOptions.hasOwnProperty("offsetTop")) {
-					topImage = -textureOptions.offsetTop;
+				if (fillImageSettings.hasOwnProperty("offsetTop")) {
+					topImage = -fillImageSettings.offsetTop;
 				}
 
-				if (textureOptions.syncRatio) {
-					if (textureOptions.hasOwnProperty("scaling")) {
-						widthImage *= textureOptions.scaling;
-						heightImage *= textureOptions.scaling;
+				if (fillImageSettings.syncRatio) {
+					if (fillImageSettings.hasOwnProperty("scaling")) {
+						widthImage *= fillImageSettings.scaling;
+						heightImage *= fillImageSettings.scaling;
 					}
 				} else {
-					if (textureOptions.hasOwnProperty("scalingX")) {
-						widthImage *= textureOptions.scalingX;
+					if (fillImageSettings.hasOwnProperty("scalingX")) {
+						widthImage *= fillImageSettings.scalingX;
 					}
-					if (textureOptions.hasOwnProperty("scalingY")) {
-						heightImage *= textureOptions.scalingY;
+					if (fillImageSettings.hasOwnProperty("scalingY")) {
+						heightImage *= fillImageSettings.scalingY;
 					}
 				}
 
-				if (textureOptions.hasOwnProperty("leftPosition")) {
-					leftImage += textureOptions.leftPosition;
+				if (fillImageSettings.hasOwnProperty("leftPosition")) {
+					leftImage += fillImageSettings.leftPosition;
 				}
-				if (textureOptions.hasOwnProperty("topPosition")) {
-					topImage -= textureOptions.topPosition;
+				if (fillImageSettings.hasOwnProperty("topPosition")) {
+					topImage -= fillImageSettings.topPosition;
 				}
 			}
 
 			var image = SvgElement.create('image');
-			image.setAttribute('href', item._textureFill.src);
+			image.setAttribute('href', item._fillImage.src);
 			image.setAttribute('width', widthImage + 'px');
 			image.setAttribute('height', heightImage + 'px');
 
@@ -15789,23 +15789,23 @@ new function () {
 				height: heightImage + 'px'
 			}, formatter);
 
-			if (textureOptions && widthImage > 0 && heightImage > 0) {
+			if (fillImageSettings && widthImage > 0 && heightImage > 0) {
 				var transforms = [];
 
-				if (textureOptions.horizontalFlip || textureOptions.verticalFlip) {
-					var scaleX = textureOptions.horizontalFlip ? -1 : 1;
-					var scaleY = textureOptions.verticalFlip ? -1 : 1;
-					var translateX = textureOptions.horizontalFlip ? widthImage : 0;
-					var translateY = textureOptions.verticalFlip ? heightImage : 0;
+				if (fillImageSettings.horizontalFlip || fillImageSettings.verticalFlip) {
+					var scaleX = fillImageSettings.horizontalFlip ? -1 : 1;
+					var scaleY = fillImageSettings.verticalFlip ? -1 : 1;
+					var translateX = fillImageSettings.horizontalFlip ? widthImage : 0;
+					var translateY = fillImageSettings.verticalFlip ? heightImage : 0;
 					transforms.push('translate(' + translateX + ',' + translateY + ')');
 					transforms.push('scale(' + scaleX + ',' + scaleY + ')');
 				}
 
-				if (textureOptions.hasOwnProperty("rotation")) {
+				if (fillImageSettings.hasOwnProperty("rotation")) {
 					var centerX = widthImage / 2;
 					var centerY = heightImage / 2;
 					transforms.push('translate(' + centerX + ',' + centerY + ')');
-					transforms.push('rotate(' + textureOptions.rotation + ')');
+					transforms.push('rotate(' + fillImageSettings.rotation + ')');
 					transforms.push('translate(' + (-centerX) + ',' + (-centerY) + ')');
 				}
 
