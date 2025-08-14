@@ -203,7 +203,7 @@ var Item = Base.extend(Emitter, /** @lends Item# */{
             serialize(this._style._defaults);
         // There is no compact form for Item serialization, we always keep the
         // class.
-            return [this._class, props];
+        return [this._class, props];
     },
 
     /**
@@ -857,25 +857,25 @@ var Item = Base.extend(Emitter, /** @lends Item# */{
         var hasMatrix = options || matrix instanceof Matrix,
             opts = Base.set({}, hasMatrix ? options : matrix,
                     this._boundsOptions);
-        // We can only cache the bounds if the path uses stroke-scaling, or if
-        // no stroke is involved in the calculation of the bounds.
-        // When strokeScaling is false, the bounds are affected by the zoom
-        // level of the view, hence we can't cache.
-        // TODO: Look more into handling of stroke-scaling, e.g. on groups with
-        // some children that have strokeScaling, as well as SymbolItem with
-        // SymbolDefinition that have strokeScaling!
-        // TODO: Once that is resolved, we should be able to turn off
-        // opts.stroke if a resolved item definition does not have a stroke,
-        // allowing the code to share caches between #strokeBounds and #bounds.
-        if (!opts.stroke || this.getStrokeScaling())
-            opts.cacheItem = this;
-        // If we're caching bounds, pass on this item as cacheItem, so
-        // the children can setup _boundsCache structures for it.
-        var rect = this._getCachedBounds(hasMatrix && matrix, opts).rect;
-        // If we're returning '#bounds', create a LinkedRectangle that uses
-        // the setBounds() setter to update the Item whenever the bounds are
-        // changed:
-        return !arguments.length
+            // We can only cache the bounds if the path uses stroke-scaling, or if
+            // no stroke is involved in the calculation of the bounds.
+            // When strokeScaling is false, the bounds are affected by the zoom
+            // level of the view, hence we can't cache.
+            // TODO: Look more into handling of stroke-scaling, e.g. on groups with
+            // some children that have strokeScaling, as well as SymbolItem with
+            // SymbolDefinition that have strokeScaling!
+            // TODO: Once that is resolved, we should be able to turn off
+            // opts.stroke if a resolved item definition does not have a stroke,
+            // allowing the code to share caches between #strokeBounds and #bounds.
+            if (!opts.stroke || this.getStrokeScaling())
+                opts.cacheItem = this;
+            // If we're caching bounds, pass on this item as cacheItem, so
+            // the children can setup _boundsCache structures for it.
+            var rect = this._getCachedBounds(hasMatrix && matrix, opts).rect;
+            // If we're returning '#bounds', create a LinkedRectangle that uses
+            // the setBounds() setter to update the Item whenever the bounds are
+            // changed:
+            return !arguments.length
                 ? new LinkedRectangle(rect.x, rect.y, rect.width, rect.height,
                     this, 'setBounds')
                 : rect;
@@ -898,9 +898,9 @@ var Item = Base.extend(Emitter, /** @lends Item# */{
             if (!_matrix.isInvertible()) {
                 _matrix.set(_matrix._backup
                         || new Matrix().translate(_matrix.getTranslation()));
-                bounds = this.getBounds();
-            }
-            matrix.scale(
+                    bounds = this.getBounds();
+                }
+                matrix.scale(
                     bounds.width !== 0 ? rect.width / bounds.width : 0,
                     bounds.height !== 0 ? rect.height / bounds.height : 0);
         }
@@ -1039,71 +1039,71 @@ var Item = Base.extend(Emitter, /** @lends Item# */{
             }
         },
 
-        /**
-         * Clears cached bounds of all items that the children of this item are
-         * contributing to. See _updateBoundsCache() for an explanation why this
-         * information is stored on parents, not the children themselves.
-         */
-        _clearBoundsCache: function (item) {
-            // This is defined as a static method so Symbol can used it too.
-            // Clear the position as well, since it's depending on bounds.
-            var cache = item._boundsCache;
-            if (cache) {
-                // Erase cache before looping, to prevent circular recursion.
-                item._bounds = item._position = item._boundsCache = undefined;
-                for (var i = 0, list = cache.list, l = list.length; i < l; i++) {
-                    var other = list[i];
-                    if (other !== item) {
-                        other._bounds = other._position = undefined;
-                        // We need to recursively call _clearBoundsCache, as
-                        // when the cache for the other item's children is not
-                        // valid anymore, that propagates up the scene graph.
-                        if (other._boundsCache)
-                            Item._clearBoundsCache(other);
+            /**
+             * Clears cached bounds of all items that the children of this item are
+             * contributing to. See _updateBoundsCache() for an explanation why this
+             * information is stored on parents, not the children themselves.
+             */
+            _clearBoundsCache: function (item) {
+                // This is defined as a static method so Symbol can used it too.
+                // Clear the position as well, since it's depending on bounds.
+                var cache = item._boundsCache;
+                if (cache) {
+                    // Erase cache before looping, to prevent circular recursion.
+                    item._bounds = item._position = item._boundsCache = undefined;
+                    for (var i = 0, list = cache.list, l = list.length; i < l; i++) {
+                        var other = list[i];
+                        if (other !== item) {
+                            other._bounds = other._position = undefined;
+                            // We need to recursively call _clearBoundsCache, as
+                            // when the cache for the other item's children is not
+                            // valid anymore, that propagates up the scene graph.
+                            if (other._boundsCache)
+                                Item._clearBoundsCache(other);
+                        }
                     }
                 }
-            }
-        },
+            },
 
-        /**
-         * Gets the combined bounds of all specified items.
-         */
-        _getBounds: function (items, matrix, options) {
-            var x1 = Infinity,
-                x2 = -x1,
-                y1 = x1,
-                y2 = x2,
-                nonscaling = false;
-            // NOTE: As soon as one child-item has non-scaling strokes, the full
-            // bounds need to be considered non-scaling for caching purposes.
-            options = options || {};
-            for (var i = 0, l = items.length; i < l; i++) {
-                var item = items[i];
-                // Item is handled if it is visible and not recursively empty.
-                // This avoid errors with nested empty groups (#1467).
-                if (item._visible && !item.isEmpty(true)) {
-                    // Pass true for noInternal, since even when getting
-                    // internal bounds for this item, we need to apply the
-                    // matrices to its children.
-                    var bounds = item._getCachedBounds(
-                        matrix && matrix.appended(item._matrix), options, true),
-                        rect = bounds.rect;
-                    x1 = Math.min(rect.x, x1);
-                    y1 = Math.min(rect.y, y1);
-                    x2 = Math.max(rect.x + rect.width, x2);
-                    y2 = Math.max(rect.y + rect.height, y2);
-                    if (bounds.nonscaling)
-                        nonscaling = true;
+            /**
+             * Gets the combined bounds of all specified items.
+             */
+            _getBounds: function (items, matrix, options) {
+                var x1 = Infinity,
+                    x2 = -x1,
+                    y1 = x1,
+                    y2 = x2,
+                    nonscaling = false;
+                // NOTE: As soon as one child-item has non-scaling strokes, the full
+                // bounds need to be considered non-scaling for caching purposes.
+                options = options || {};
+                for (var i = 0, l = items.length; i < l; i++) {
+                    var item = items[i];
+                    // Item is handled if it is visible and not recursively empty.
+                    // This avoid errors with nested empty groups (#1467).
+                    if (item._visible && !item.isEmpty(true)) {
+                        // Pass true for noInternal, since even when getting
+                        // internal bounds for this item, we need to apply the
+                        // matrices to its children.
+                        var bounds = item._getCachedBounds(
+                            matrix && matrix.appended(item._matrix), options, true),
+                            rect = bounds.rect;
+                        x1 = Math.min(rect.x, x1);
+                        y1 = Math.min(rect.y, y1);
+                        x2 = Math.max(rect.x + rect.width, x2);
+                        y2 = Math.max(rect.y + rect.height, y2);
+                        if (bounds.nonscaling)
+                            nonscaling = true;
+                    }
                 }
+                return {
+                    rect: isFinite(x1)
+                        ? new Rectangle(x1, y1, x2 - x1, y2 - y1)
+                        : new Rectangle(),
+                    nonscaling: nonscaling
+                };
             }
-            return {
-                rect: isFinite(x1)
-                    ? new Rectangle(x1, y1, x2 - x1, y2 - y1)
-                    : new Rectangle(),
-                nonscaling: nonscaling
-            };
         }
-    }
 
     /**
      * The bounding rectangle of the item excluding stroke width.
@@ -1726,7 +1726,7 @@ var Item = Base.extend(Emitter, /** @lends Item# */{
         // meaning the default value has been overwritten (default is on
         // prototype).
         var keys = ['_locked', '_visible', '_blendMode', '_opacity',
-                '_clipMask', '_guide', '_enhanceBlendMode', '_fillImage', '_fillImageUrl', '_loaded']; // Matteo - aggiunto enhanceBlendMode
+            '_clipMask', '_guide', '_enhanceBlendMode', '_fillImage', '_fillImageUrl', '_fillImageSettings', '_loaded']; // Matteo - aggiunto enhanceBlendMode
         for (var i = 0, l = keys.length; i < l; i++) {
             var key = keys[i];
             if (source.hasOwnProperty(key))
@@ -4530,9 +4530,9 @@ var Item = Base.extend(Emitter, /** @lends Item# */{
         }
         this._draw(ctx, param, viewMatrix, strokeMatrix);
         // Matteo - Test enhanced blend mode
-            if (direct && blendMode != "normal" && enhanceBlendMode) {
-                this._draw(ctx, param, viewMatrix, strokeMatrix);
-            }
+        if (direct && blendMode != "normal" && enhanceBlendMode) {
+            this._draw(ctx, param, viewMatrix, strokeMatrix);
+        }
 
         ctx.restore();
         matrices.pop();

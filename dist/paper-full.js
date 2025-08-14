@@ -9,7 +9,7 @@
  *
  * All rights reserved.
  *
- * Date: Thu Aug 14 15:15:37 2025 +0200
+ * Date: Thu Aug 14 16:28:17 2025 +0200
  *
  ***
  *
@@ -3260,7 +3260,7 @@ var Item = Base.extend(Emitter, {
 		serialize(this._serializeFields);
 		if (!(this instanceof Group))
 			serialize(this._style._defaults);
-			return [this._class, props];
+		return [this._class, props];
 	},
 
 		_changed: function (flags) {
@@ -3475,10 +3475,10 @@ var Item = Base.extend(Emitter, {
 		var hasMatrix = options || matrix instanceof Matrix,
 			opts = Base.set({}, hasMatrix ? options : matrix,
 					this._boundsOptions);
-		if (!opts.stroke || this.getStrokeScaling())
-			opts.cacheItem = this;
-		var rect = this._getCachedBounds(hasMatrix && matrix, opts).rect;
-		return !arguments.length
+			if (!opts.stroke || this.getStrokeScaling())
+				opts.cacheItem = this;
+			var rect = this._getCachedBounds(hasMatrix && matrix, opts).rect;
+			return !arguments.length
 				? new LinkedRectangle(rect.x, rect.y, rect.width, rect.height,
 					this, 'setBounds')
 				: rect;
@@ -3495,9 +3495,9 @@ var Item = Base.extend(Emitter, {
 			if (!_matrix.isInvertible()) {
 				_matrix.set(_matrix._backup
 						|| new Matrix().translate(_matrix.getTranslation()));
-				bounds = this.getBounds();
-			}
-			matrix.scale(
+					bounds = this.getBounds();
+				}
+				matrix.scale(
 					bounds.width !== 0 ? rect.width / bounds.width : 0,
 					bounds.height !== 0 ? rect.height / bounds.height : 0);
 		}
@@ -3583,50 +3583,50 @@ var Item = Base.extend(Emitter, {
 			}
 		},
 
-		_clearBoundsCache: function (item) {
-			var cache = item._boundsCache;
-			if (cache) {
-				item._bounds = item._position = item._boundsCache = undefined;
-				for (var i = 0, list = cache.list, l = list.length; i < l; i++) {
-					var other = list[i];
-					if (other !== item) {
-						other._bounds = other._position = undefined;
-						if (other._boundsCache)
-							Item._clearBoundsCache(other);
+			_clearBoundsCache: function (item) {
+				var cache = item._boundsCache;
+				if (cache) {
+					item._bounds = item._position = item._boundsCache = undefined;
+					for (var i = 0, list = cache.list, l = list.length; i < l; i++) {
+						var other = list[i];
+						if (other !== item) {
+							other._bounds = other._position = undefined;
+							if (other._boundsCache)
+								Item._clearBoundsCache(other);
+						}
 					}
 				}
-			}
-		},
+			},
 
-		_getBounds: function (items, matrix, options) {
-			var x1 = Infinity,
-				x2 = -x1,
-				y1 = x1,
-				y2 = x2,
-				nonscaling = false;
-			options = options || {};
-			for (var i = 0, l = items.length; i < l; i++) {
-				var item = items[i];
-				if (item._visible && !item.isEmpty(true)) {
-					var bounds = item._getCachedBounds(
-						matrix && matrix.appended(item._matrix), options, true),
-						rect = bounds.rect;
-					x1 = Math.min(rect.x, x1);
-					y1 = Math.min(rect.y, y1);
-					x2 = Math.max(rect.x + rect.width, x2);
-					y2 = Math.max(rect.y + rect.height, y2);
-					if (bounds.nonscaling)
-						nonscaling = true;
+			_getBounds: function (items, matrix, options) {
+				var x1 = Infinity,
+					x2 = -x1,
+					y1 = x1,
+					y2 = x2,
+					nonscaling = false;
+				options = options || {};
+				for (var i = 0, l = items.length; i < l; i++) {
+					var item = items[i];
+					if (item._visible && !item.isEmpty(true)) {
+						var bounds = item._getCachedBounds(
+							matrix && matrix.appended(item._matrix), options, true),
+							rect = bounds.rect;
+						x1 = Math.min(rect.x, x1);
+						y1 = Math.min(rect.y, y1);
+						x2 = Math.max(rect.x + rect.width, x2);
+						y2 = Math.max(rect.y + rect.height, y2);
+						if (bounds.nonscaling)
+							nonscaling = true;
+					}
 				}
+				return {
+					rect: isFinite(x1)
+						? new Rectangle(x1, y1, x2 - x1, y2 - y1)
+						: new Rectangle(),
+					nonscaling: nonscaling
+				};
 			}
-			return {
-				rect: isFinite(x1)
-					? new Rectangle(x1, y1, x2 - x1, y2 - y1)
-					: new Rectangle(),
-				nonscaling: nonscaling
-			};
 		}
-	}
 
 	}), {
 	beans: true,
@@ -3889,7 +3889,7 @@ var Item = Base.extend(Emitter, {
 		copyAttributes: function (source, excludeMatrix) {
 		this.setStyle(source._style);
 		var keys = ['_locked', '_visible', '_blendMode', '_opacity',
-				'_clipMask', '_guide', '_enhanceBlendMode', '_fillImage', '_fillImageUrl', '_loaded'];
+			'_clipMask', '_guide', '_enhanceBlendMode', '_fillImage', '_fillImageUrl', '_fillImageSettings', '_loaded'];
 		for (var i = 0, l = keys.length; i < l; i++) {
 			var key = keys[i];
 			if (source.hasOwnProperty(key))
@@ -4788,9 +4788,9 @@ var Item = Base.extend(Emitter, {
 				ctx.translate(-offset.x, -offset.y);
 		}
 		this._draw(ctx, param, viewMatrix, strokeMatrix);
-			if (direct && blendMode != "normal" && enhanceBlendMode) {
-				this._draw(ctx, param, viewMatrix, strokeMatrix);
-			}
+		if (direct && blendMode != "normal" && enhanceBlendMode) {
+			this._draw(ctx, param, viewMatrix, strokeMatrix);
+		}
 
 		ctx.restore();
 		matrices.pop();
@@ -15451,7 +15451,7 @@ new function () {
 
 			const fillImageSettings = item._fillImageSettings;
 
-			 var bounds = item.bounds;
+			var bounds = item.bounds;
 
 			var imageRatio = item._fillImage.naturalWidth / item._fillImage.naturalHeight;
 
