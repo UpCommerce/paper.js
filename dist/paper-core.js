@@ -9,7 +9,7 @@
  *
  * All rights reserved.
  *
- * Date: Wed Aug 13 17:08:32 2025 +0200
+ * Date: Thu Aug 14 10:47:32 2025 +0200
  *
  ***
  *
@@ -10152,7 +10152,7 @@ var CompoundPath = PathItem.extend({
 	_serializeFields: {
 		children: [],
 		fillImage: null,
-		fillImageSettings:null,
+		fillImageSettings: null,
 	},
 	beans: true,
 
@@ -10277,7 +10277,7 @@ var CompoundPath = PathItem.extend({
 		return reduce.base.call(this);
 	},
 
-	isClosed: function() {
+	isClosed: function () {
 		var children = this._children;
 		for (var i = 0, l = children.length; i < l; i++) {
 			if (!children[i]._closed)
@@ -10286,24 +10286,24 @@ var CompoundPath = PathItem.extend({
 		return true;
 	},
 
-	setClosed: function(closed) {
+	setClosed: function (closed) {
 		var children = this._children;
 		for (var i = 0, l = children.length; i < l; i++) {
 			children[i].setClosed(closed);
 		}
 	},
 
-	getFirstSegment: function() {
+	getFirstSegment: function () {
 		var first = this.getFirstChild();
 		return first && first.getFirstSegment();
 	},
 
-	getLastSegment: function() {
+	getLastSegment: function () {
 		var last = this.getLastChild();
 		return last && last.getLastSegment();
 	},
 
-	getCurves: function() {
+	getCurves: function () {
 		var children = this._children,
 			curves = [];
 		for (var i = 0, l = children.length; i < l; i++) {
@@ -10312,17 +10312,17 @@ var CompoundPath = PathItem.extend({
 		return curves;
 	},
 
-	getFirstCurve: function() {
+	getFirstCurve: function () {
 		var first = this.getFirstChild();
 		return first && first.getFirstCurve();
 	},
 
-	getLastCurve: function() {
+	getLastCurve: function () {
 		var last = this.getLastChild();
 		return last && last.getLastCurve();
 	},
 
-	getArea: function() {
+	getArea: function () {
 		var children = this._children,
 			area = 0;
 		for (var i = 0, l = children.length; i < l; i++)
@@ -10330,7 +10330,7 @@ var CompoundPath = PathItem.extend({
 		return area;
 	},
 
-	getLength: function() {
+	getLength: function () {
 		var children = this._children,
 			length = 0;
 		for (var i = 0, l = children.length; i < l; i++)
@@ -10338,33 +10338,33 @@ var CompoundPath = PathItem.extend({
 		return length;
 	},
 
-	getPathData: function(_matrix, _precision) {
+	getPathData: function (_matrix, _precision) {
 		var children = this._children,
 			paths = [];
 		for (var i = 0, l = children.length; i < l; i++) {
 			var child = children[i],
 				mx = child._matrix;
 			paths.push(child.getPathData(_matrix && !mx.isIdentity()
-					? _matrix.appended(mx) : _matrix, _precision));
+				? _matrix.appended(mx) : _matrix, _precision));
 		}
 		return paths.join('');
 	},
 
 	_hitTestChildren: function _hitTestChildren(point, options, viewMatrix) {
 		return _hitTestChildren.base.call(this, point,
-				options.class === Path || options.type === 'path' ? options
-					: Base.set({}, options, { fill: false }),
-				viewMatrix);
+			options.class === Path || options.type === 'path' ? options
+				: Base.set({}, options, { fill: false }),
+			viewMatrix);
 	},
 
-	_draw: function(ctx, param, viewMatrix, strokeMatrix) {
+	_draw: function (ctx, param, viewMatrix, strokeMatrix) {
 		var children = this._children;
 		if (!children.length)
 			return;
 
 		param = param.extend({ dontStart: true, dontFinish: true });
 		ctx.beginPath();
-		for (var i = 0, l = children.length; i < l; i++){
+		for (var i = 0, l = children.length; i < l; i++) {
 			children[i].draw(ctx, param, strokeMatrix);
 		}
 
@@ -10379,10 +10379,11 @@ var CompoundPath = PathItem.extend({
 				ctx.stroke();
 		}
 
-		if(this._fillImage){
+		if (this._fillImage) {
 			var bounds = this.bounds;
 			const textWidth = bounds.width;
 			var scaling = Math.max(5, textWidth / 50);
+
 			var canvasWidth = Math.round(textWidth * scaling);
 			var canvasHeight = Math.round(bounds.height * scaling * 1.5);
 
@@ -10414,12 +10415,12 @@ var CompoundPath = PathItem.extend({
 			newCtx.shadowColor = null;
 			newCtx.font = ctx.font;
 
-			const positionX = canvasWidth/2 - bounds.center.x;
-			const positionY = canvasHeight/2 - bounds.center.y;
+			const positionX = canvasWidth / 2 - bounds.center.x;
+			const positionY = canvasHeight / 2 - bounds.center.y;
 
 			newCtx.translate(positionX, positionY);
 
-			for (var i = 0, l = children.length; i < l; i++){
+			for (var i = 0, l = children.length; i < l; i++) {
 				const child = children[i];
 				child.draw(newCtx, param, strokeMatrix);
 			}
@@ -10431,9 +10432,9 @@ var CompoundPath = PathItem.extend({
 			}
 
 			newCtx.globalCompositeOperation = "source-atop";
-			const imagePositionX = -bounds.width/2 + bounds.center.x;
-			const imagePositionY = -bounds.height/2 + bounds.center.y;
-			newCtx.translate(imagePositionX,imagePositionY);
+			const imagePositionX = -bounds.width / 2 + bounds.center.x;
+			const imagePositionY = -bounds.height / 2 + bounds.center.y;
+			newCtx.translate(imagePositionX, imagePositionY);
 
 			let leftImage = 0;
 			let topImage = 0;
@@ -10493,7 +10494,7 @@ var CompoundPath = PathItem.extend({
 
 			newCtx.globalCompositeOperation = "source-over";
 
-			if (style.hasStroke()){
+			if (style.hasStroke()) {
 				newCtx.stroke();
 			}
 
@@ -10501,66 +10502,66 @@ var CompoundPath = PathItem.extend({
 		}
 	},
 
-	_drawSelected: function(ctx, matrix, selectionItems) {
+	_drawSelected: function (ctx, matrix, selectionItems) {
 		var children = this._children;
 		for (var i = 0, l = children.length; i < l; i++) {
 			var child = children[i],
 				mx = child._matrix;
 			if (!selectionItems[child._id]) {
 				child._drawSelected(ctx, mx.isIdentity() ? matrix
-						: matrix.appended(mx));
+					: matrix.appended(mx));
 			}
 		}
 	}
 },
-new function() {
-	function getCurrentPath(that, check) {
-		var children = that._children;
-		if (check && !children.length)
-			throw new Error('Use a moveTo() command first');
-		return children[children.length - 1];
-	}
+	new function () {
+		function getCurrentPath(that, check) {
+			var children = that._children;
+			if (check && !children.length)
+				throw new Error('Use a moveTo() command first');
+			return children[children.length - 1];
+		}
 
-	return Base.each(['lineTo', 'cubicCurveTo', 'quadraticCurveTo', 'curveTo',
+		return Base.each(['lineTo', 'cubicCurveTo', 'quadraticCurveTo', 'curveTo',
 			'arcTo', 'lineBy', 'cubicCurveBy', 'quadraticCurveBy', 'curveBy',
 			'arcBy'],
-		function(key) {
-			this[key] = function() {
-				var path = getCurrentPath(this, true);
-				path[key].apply(path, arguments);
-			};
-		}, {
-			moveTo: function() {
+			function (key) {
+				this[key] = function () {
+					var path = getCurrentPath(this, true);
+					path[key].apply(path, arguments);
+				};
+			}, {
+				moveTo: function () {
 				var current = getCurrentPath(this),
 					path = current && current.isEmpty() ? current
-							: new Path(Item.NO_INSERT);
+						: new Path(Item.NO_INSERT);
 				if (path !== current)
 					this.addChild(path);
 				path.moveTo.apply(path, arguments);
 			},
 
-			moveBy: function() {
+				moveBy: function () {
 				var current = getCurrentPath(this, true),
 					last = current && current.getLastSegment(),
 					point = Point.read(arguments);
 				this.moveTo(last ? point.add(last._point) : point);
 			},
 
-			closePath: function(tolerance) {
+				closePath: function (tolerance) {
 				getCurrentPath(this, true).closePath(tolerance);
 			}
 		}
-	);
-}, Base.each(['reverse', 'flatten', 'simplify', 'smooth'], function(key) {
-	this[key] = function(param) {
-		var children = this._children,
-			res;
-		for (var i = 0, l = children.length; i < l; i++) {
-			res = children[i][key](param) || res;
-		}
-		return res;
-	};
-}, {}));
+		);
+	}, Base.each(['reverse', 'flatten', 'simplify', 'smooth'], function (key) {
+		this[key] = function (param) {
+			var children = this._children,
+				res;
+			for (var i = 0, l = children.length; i < l; i++) {
+				res = children[i][key](param) || res;
+			}
+			return res;
+		};
+	}, {}));
 
 PathItem.inject(new function() {
 	var min = Math.min,
@@ -15588,9 +15589,13 @@ new function () {
 				radial = gradient._radial,
 				attrs;
 
-			var transformedOrigin = item.data.localGradientOrigin ?? parentItem.data.localGradientOrigin;
-			var transformedDestination = item.data.localGradientDestination ?? parentItem.data.localGradientDestination;
+			var transformedOrigin = item.data.localGradientOrigin ?? (parentItem ? parentItem.data.localGradientOrigin : null);
+			var transformedDestination = item.data.localGradientDestination ?? (parentItem ? parentItem.data.localGradientDestination : null);
 			var transformedHighlight = highlight ? matrix._inverseTransform(highlight) : null;
+
+			if (!transformedOrigin || !transformedDestination) {
+				throw new Error('Trying exporting a gradient without origin or destination available.');
+			}
 
 			if (radial) {
 				if (parentItem && parentItem.data.isTextOnPath) {

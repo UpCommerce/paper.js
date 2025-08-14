@@ -350,9 +350,13 @@ new function () {
 
             // The origin in the output SVG is different from paper origin.
             // 0,0 here is the center of element, but 0,0 on svg is bottom left
-            var transformedOrigin = item.data.localGradientOrigin ?? parentItem.data.localGradientOrigin;
-            var transformedDestination = item.data.localGradientDestination ?? parentItem.data.localGradientDestination;
+            var transformedOrigin = item.data.localGradientOrigin ?? (parentItem ? parentItem.data.localGradientOrigin : null);
+            var transformedDestination = item.data.localGradientDestination ?? (parentItem ? parentItem.data.localGradientDestination : null);
             var transformedHighlight = highlight ? matrix._inverseTransform(highlight) : null;
+
+            if (!transformedOrigin || !transformedDestination) {
+                throw new Error('Trying exporting a gradient without origin or destination available.');
+            }
 
             if (radial) {
                 if (parentItem && parentItem.data.isTextOnPath) {
