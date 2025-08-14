@@ -9,7 +9,7 @@
  *
  * All rights reserved.
  *
- * Date: Thu Aug 14 11:09:03 2025 +0200
+ * Date: Thu Aug 14 15:15:37 2025 +0200
  *
  ***
  *
@@ -10399,10 +10399,7 @@ var CompoundPath = PathItem.extend({
 
 			this._setStyles(newCtx, param, viewMatrix);
 
-			let myTest = () => {
-				return false;
-			}
-			var DEBUG = myTest();
+			var DEBUG = false;
 
 			if (DEBUG) {
 				document.body.append(newCtx.canvas);
@@ -15422,7 +15419,7 @@ new function () {
 	}
 
 	function exportCompoundPath(item, options) {
-		var hasGradients = (item.data && item.data.gradientSettings) || (item.parent && item.parent.data && item.parent.data.gradientSettings);
+		var hasGradients = item.fillColor && item.fillColor.gradient;
 
 		if (!item._fillImage && !hasGradients) {
 			var attrs = getTransform(item._matrix);
@@ -15431,7 +15428,7 @@ new function () {
 				attrs.d = data;
 			const path = SvgElement.create('path', attrs, formatter);
 			return path;
-		} else if (hasGradients && item.fillColor && item.fillColor.gradient) {
+		} else if (hasGradients) {
 			var attrs = getTransform(item._matrix, false);
 			var data = item.getPathData(null, options.precision);
 			if (data)
@@ -15629,9 +15626,16 @@ new function () {
 						r: newOrigin.getDistance(newDestination)
 					};
 				} else if (item.data.isTextArt) {
+					var newOrigin = item.data.originalMatrix.transform([transformedOrigin.x, transformedOrigin.y]);
+					var newDestination = item.data.originalMatrix.transform([transformedDestination.x, transformedDestination.y]);
+
+					newOrigin = item.globalToLocal(newOrigin);
+					newDestination = item.globalToLocal(newDestination);
+
 					attrs = {
-						cx: transformedOrigin.x - myBounds.width / 2,
-						cy: (transformedOrigin.y - myBounds.height / 2) / 2,
+						cx: newOrigin.x,
+						cy: newOrigin.y,
+						r: newOrigin.getDistance(newDestination)
 					};
 					var highlight = color.getHighlight();
 					if (highlight) {

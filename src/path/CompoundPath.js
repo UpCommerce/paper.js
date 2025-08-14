@@ -421,10 +421,7 @@ var CompoundPath = PathItem.extend(/** @lends CompoundPath# */{
 
             this._setStyles(newCtx, param, viewMatrix);
 
-            let myTest = () => {
-                return false;
-            }
-            var DEBUG = myTest();
+            var DEBUG = false;
 
             if (DEBUG) {
                 document.body.append(newCtx.canvas);

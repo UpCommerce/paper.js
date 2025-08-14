@@ -170,16 +170,16 @@ new function () {
     }
 
     function exportCompoundPath(item, options) {
-        var hasGradients = (item.data && item.data.gradientSettings) || (item.parent && item.parent.data && item.parent.data.gradientSettings);
+        var hasGradients = item.fillColor && item.fillColor.gradient;
 
         if (!item._fillImage && !hasGradients) {
-			var attrs = getTransform(item._matrix);
-			var data = item.getPathData(null, options.precision);
-			if (data)
-				attrs.d = data;
-			const path = SvgElement.create('path', attrs, formatter);
-			return path;
-        } else if (hasGradients && item.fillColor && item.fillColor.gradient) {
+            var attrs = getTransform(item._matrix);
+            var data = item.getPathData(null, options.precision);
+            if (data)
+                attrs.d = data;
+            const path = SvgElement.create('path', attrs, formatter);
+            return path;
+        } else if (hasGradients) {
             var attrs = getTransform(item._matrix, false);
             var data = item.getPathData(null, options.precision);
             if (data)
@@ -190,19 +190,19 @@ new function () {
             group.appendChild(path);
             return group;
         } else if (item._fillImage) {
-			var attrs = getTransform(item._matrix);
-			const group = SvgElement.create('g', attrs, formatter);
-			var data = item.getPathData(null, options.precision);
-			if (data)
-				attrs.d = data;
+            var attrs = getTransform(item._matrix);
+            const group = SvgElement.create('g', attrs, formatter);
+            var data = item.getPathData(null, options.precision);
+            if (data)
+                attrs.d = data;
 
-			const path = SvgElement.create('path', attrs, formatter);
+            const path = SvgElement.create('path', attrs, formatter);
 
-			group.appendChild(path);
+            group.appendChild(path);
 
-			const fillImageSettings = item._fillImageSettings;
+            const fillImageSettings = item._fillImageSettings;
 
-			 var bounds = item.bounds;
+            var bounds = item.bounds;
 
             var imageRatio = item._fillImage.naturalWidth / item._fillImage.naturalHeight;
 
@@ -217,8 +217,8 @@ new function () {
                 widthImage = bounds.height * imageRatio;
             }
 
-			heightImage = Math.round(heightImage);
-			widthImage = Math.round(widthImage);
+            heightImage = Math.round(heightImage);
+            widthImage = Math.round(widthImage);
 
             if (fillImageSettings && widthImage > 0 && heightImage > 0) {
                 var hasTextWidth = fillImageSettings.hasOwnProperty("textWidth");
@@ -271,7 +271,7 @@ new function () {
 
             setDefinition(item, image, 'image');
 
-			var filter = SvgElement.create('filter');
+            var filter = SvgElement.create('filter');
 
             var feImage = SvgElement.create('feImage', {
                 href: '#' + image.id,
@@ -281,7 +281,7 @@ new function () {
                 height: heightImage + 'px'
             }, formatter);
 
-			// Handle transformations
+            // Handle transformations
             if (fillImageSettings && widthImage > 0 && heightImage > 0) {
                 var transforms = [];
 
@@ -318,9 +318,9 @@ new function () {
             setDefinition(item, filter, 'filter');
             group.setAttribute("filter", 'url(#' + filter.id + ') ');
 
-			return group;
-		}
-	}
+            return group;
+        }
+    }
 
     function exportSymbolItem(item, options) {
         var attrs = getTransform(item._matrix, true),
@@ -387,9 +387,16 @@ new function () {
                         r: newOrigin.getDistance(newDestination)
                     };
                 } else if (item.data.isTextArt) {
+                    var newOrigin = item.data.originalMatrix.transform([transformedOrigin.x, transformedOrigin.y]);
+                    var newDestination = item.data.originalMatrix.transform([transformedDestination.x, transformedDestination.y]);
+
+                    newOrigin = item.globalToLocal(newOrigin);
+                    newDestination = item.globalToLocal(newDestination);
+
                     attrs = {
-                        cx: transformedOrigin.x - myBounds.width / 2,
-                        cy: (transformedOrigin.y - myBounds.height / 2) / 2,
+                        cx: newOrigin.x,
+                        cy: newOrigin.y,
+                        r: newOrigin.getDistance(newDestination)
                     };
                     var highlight = color.getHighlight();
                     if (highlight) {
