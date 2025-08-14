@@ -9,7 +9,7 @@
  *
  * All rights reserved.
  *
- * Date: Thu Aug 14 10:47:32 2025 +0200
+ * Date: Thu Aug 14 11:09:03 2025 +0200
  *
  ***
  *
@@ -15419,15 +15419,26 @@ new function () {
 	}
 
 	function exportCompoundPath(item, options) {
-		if(!item._fillImage){
+		var hasGradients = (item.data && item.data.gradientSettings) || (item.parent && item.parent.data && item.parent.data.gradientSettings);
+
+		if (!item._fillImage && !hasGradients) {
 			var attrs = getTransform(item._matrix);
 			var data = item.getPathData(null, options.precision);
 			if (data)
 				attrs.d = data;
 			const path = SvgElement.create('path', attrs, formatter);
 			return path;
-		}
-		if(item._fillImage){
+		} else if (hasGradients && item.fillColor && item.fillColor.gradient) {
+			var attrs = getTransform(item._matrix, false);
+			var data = item.getPathData(null, options.precision);
+			if (data)
+				attrs.d = data;
+
+			var group = SvgElement.create('g', attrs, formatter)
+			const path = SvgElement.create('path', attrs, formatter);
+			group.appendChild(path);
+			return group;
+		} else if (item._fillImage) {
 			var attrs = getTransform(item._matrix);
 			const group = SvgElement.create('g', attrs, formatter);
 			var data = item.getPathData(null, options.precision);
@@ -15614,6 +15625,16 @@ new function () {
 						cy: (newOrigin.y - myBounds.height / 2) / 2,
 						r: newOrigin.getDistance(newDestination)
 					};
+				} else if (item.data.isTextArt) {
+					attrs = {
+						cx: transformedOrigin.x - myBounds.width / 2,
+						cy: (transformedOrigin.y - myBounds.height / 2) / 2,
+					};
+					var highlight = color.getHighlight();
+					if (highlight) {
+						attrs.fx = transformedHighlight.x;
+						attrs.fy = transformedHighlight.y;
+					}
 				} else {
 					attrs = {
 						cx: transformedOrigin.x + myBounds.width / 2,
@@ -15637,6 +15658,20 @@ new function () {
 					var newDestinationX = transformedDestination.x + parentBounds.x;
 					var newDestinationY = transformedDestination.y + parentBounds.y;
 					var newDestination = item.globalToLocal([newDestinationX, newDestinationY]);
+
+					attrs = {
+						x1: newOrigin.x,
+						y1: newOrigin.y,
+						x2: newDestination.x,
+						y2: newDestination.y
+					};
+				} else if (item.data.isTextArt) {
+
+					var newOrigin = item.data.originalMatrix.transform([transformedOrigin.x, transformedOrigin.y]);
+					var newDestination = item.data.originalMatrix.transform([transformedDestination.x, transformedDestination.y]);
+
+					newOrigin = item.globalToLocal(newOrigin);
+					newDestination = item.globalToLocal(newDestination);
 
 					attrs = {
 						x1: newOrigin.x,
