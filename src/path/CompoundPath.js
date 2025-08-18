@@ -404,19 +404,22 @@ var CompoundPath = PathItem.extend(/** @lends CompoundPath# */{
         if (this._fillImage) {
             var bounds = this.bounds;
             const textWidth = bounds.width;
-            var scaling = Math.max(5, textWidth / 50);
+            // nel testo normale il textWidth e' con scaling 1
+            var scaling = Math.ceil(Math.max(5, textWidth / 50)); // Generic good quality for the rendering
 
-            var canvasWidth = Math.round(textWidth * scaling);
-            var canvasHeight = Math.round(bounds.height * scaling * 1.5);
+            // forse e' troppo grande (da discutere)
+			scaling = 5;
+
+            const strokeSpace = 100;
+            var canvasWidth = Math.round(textWidth * scaling) + strokeSpace;
+            var canvasHeight = Math.round(bounds.height * scaling * 1.5) + strokeSpace;
 
             if (canvasWidth <= 0 || canvasHeight <= 0) {
                 return;
             }
-            // canvasWidth e canvasHeight creano problemi di performance
-            // (va a scatti)
-            // 100 valore arbitrario per fare spazio allo stroke (va cambiato)
-            canvasWidth = bounds.width + 100;
-            canvasHeight = bounds.height + 100;
+
+            // canvasWidth = bounds.width + 100;
+            // canvasHeight = bounds.height + 100;
             var newCtx = CanvasProvider.getContext(canvasWidth, canvasHeight);
 
             this._setStyles(newCtx, param, viewMatrix);
@@ -437,10 +440,12 @@ var CompoundPath = PathItem.extend(/** @lends CompoundPath# */{
             newCtx.shadowColor = null;
             newCtx.font = ctx.font;
 
-            const positionX = canvasWidth / 2 - bounds.center.x;
-            const positionY = canvasHeight / 2 - bounds.center.y;
+            const positionX = bounds.width / 2 - bounds.center.x + (strokeSpace/2)/scaling;
+			const positionY = bounds.height/ 2 - bounds.center.y + (strokeSpace/2)/scaling;
 
-            newCtx.translate(positionX, positionY);
+            newCtx.scale(scaling,scaling);
+
+			newCtx.translate(positionX, positionY);
 
             for (var i = 0, l = children.length; i < l; i++) {
                 const child = children[i];
@@ -521,7 +526,10 @@ var CompoundPath = PathItem.extend(/** @lends CompoundPath# */{
                 newCtx.stroke();
             }
 
-            ctx.drawImage(newCtx.canvas, -positionX, -positionY);
+            ctx.translate(-positionX, -positionY);
+			ctx.scale(1/scaling,1/scaling);
+			ctx.drawImage(newCtx.canvas, 0, 0);
+			ctx.scale(scaling,scaling);
         }
     },
 
