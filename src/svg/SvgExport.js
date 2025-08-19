@@ -186,17 +186,44 @@ new function () {
                 attrs.d = data;
 
             var group = SvgElement.create('g', attrs, formatter)
-            const path = SvgElement.create('path', attrs, formatter);
+            const path = SvgElement.create('path', { d: data }, formatter);
             group.appendChild(path);
+
+            // Add stroke path if item has stroke
+            if (item.strokeColor) {
+                const strokePath = SvgElement.create('path', {
+                    d: data,
+                    fill: 'transparent',
+                    stroke: item.strokeColor.toCSS(true),
+                    'stroke-width': item.strokeWidth,
+                    'stroke-linecap': item.strokeCap,
+                    'stroke-linejoin': item.strokeJoin,
+                    'stroke-miterlimit': item.miterLimit
+                }, formatter);
+
+                if (item.dashArray && item.dashArray.length > 0) {
+                    strokePath.setAttribute('stroke-dasharray', item.dashArray.join(','));
+                }
+
+                if (item.dashOffset) {
+                    strokePath.setAttribute('stroke-dashoffset', item.dashOffset);
+                }
+
+                var wrapperGroup = SvgElement.create('g', {}, formatter);
+                wrapperGroup.appendChild(group);
+                wrapperGroup.appendChild(strokePath);
+                group = wrapperGroup;
+            }
+
             return group;
         } else if (item._fillImage) {
             var attrs = getTransform(item._matrix);
-            const group = SvgElement.create('g', attrs, formatter);
+            var group = SvgElement.create('g', attrs, formatter);
             var data = item.getPathData(null, options.precision);
             if (data)
                 attrs.d = data;
 
-            const path = SvgElement.create('path', attrs, formatter);
+            const path = SvgElement.create('path', { d: data }, formatter);
 
             group.appendChild(path);
 
@@ -317,6 +344,30 @@ new function () {
 
             setDefinition(item, filter, 'filter');
             group.setAttribute("filter", 'url(#' + filter.id + ') ');
+
+            // Add stroke path if item has stroke
+            if (item.strokeColor) {
+                const strokePath = SvgElement.create('path', {
+                    d: data,
+                    fill: 'transparent',
+                    stroke: item.strokeColor.toCSS(true),
+                    'stroke-width': item.strokeWidth,
+                    'stroke-linecap': item.strokeCap,
+                    'stroke-linejoin': item.strokeJoin,
+                    'stroke-miterlimit': item.miterLimit
+                }, formatter);
+                if (item.dashArray && item.dashArray.length > 0) {
+                    strokePath.setAttribute('stroke-dasharray', item.dashArray.join(','));
+                }
+                if (item.dashOffset) {
+                    strokePath.setAttribute('stroke-dashoffset', item.dashOffset);
+                }
+
+                var wrapperGroup = SvgElement.create('g', {}, formatter);
+                wrapperGroup.appendChild(group);
+                wrapperGroup.appendChild(strokePath);
+                group = wrapperGroup;
+            }
 
             return group;
         }
