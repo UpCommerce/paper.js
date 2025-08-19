@@ -193,7 +193,7 @@ new function () {
             if (item.strokeColor) {
                 const strokePath = SvgElement.create('path', {
                     d: data,
-                    fill: 'transparent',
+                    fill: 'none',
                     stroke: item.strokeColor.toCSS(true),
                     'stroke-width': item.strokeWidth,
                     'stroke-linecap': item.strokeCap,
@@ -349,7 +349,7 @@ new function () {
             if (item.strokeColor) {
                 const strokePath = SvgElement.create('path', {
                     d: data,
-                    fill: 'transparent',
+                    fill: 'none',
                     stroke: item.strokeColor.toCSS(true),
                     'stroke-width': item.strokeWidth,
                     'stroke-linecap': item.strokeCap,
