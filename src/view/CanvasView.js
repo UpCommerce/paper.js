@@ -146,7 +146,7 @@ var CanvasView = View.extend(
             for (var i = 0, l = lines.length; i < l; i++) {
 
                 var measure = ctx.measureText(lines[i]);
-                var lineWidth = measure.actualBoundingBoxRight + measure.actualBoundingBoxLeft;
+                var lineWidth = measure.actualBoundingBoxRight - measure.actualBoundingBoxLeft;
                 if (lineWidth > width) width = lineWidth;
             }
             ctx.font = prevFont;

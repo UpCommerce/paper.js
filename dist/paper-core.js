@@ -9,7 +9,7 @@
  *
  * All rights reserved.
  *
- * Date: Mon Aug 18 13:02:31 2025 +0200
+ * Date: Tue Aug 19 13:07:19 2025 +0200
  *
  ***
  *
@@ -14129,7 +14129,7 @@ var CanvasView = View.extend(
 			for (var i = 0, l = lines.length; i < l; i++) {
 
 				var measure = ctx.measureText(lines[i]);
-				var lineWidth = measure.actualBoundingBoxRight + measure.actualBoundingBoxLeft;
+				var lineWidth = measure.actualBoundingBoxRight - measure.actualBoundingBoxLeft;
 				if (lineWidth > width) width = lineWidth;
 			}
 			ctx.font = prevFont;
