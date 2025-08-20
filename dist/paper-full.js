@@ -9,7 +9,7 @@
  *
  * All rights reserved.
  *
- * Date: Wed Aug 20 09:23:05 2025 +0200
+ * Date: Wed Aug 20 09:24:32 2025 +0200
  *
  ***
  *
@@ -12015,7 +12015,7 @@ var PointText = TextItem.extend({
 				var widthImage = textWidth;
 				var heightImage = textWidth / imageRatio;
 
-				if (bounds.height > bounds.width) {
+				if(heightImage < bounds.height){
 					heightImage = bounds.height;
 					widthImage = bounds.height * imageRatio;
 				}
@@ -12029,7 +12029,7 @@ var PointText = TextItem.extend({
 						heightImage = Math.ceil(widthImage / imageRatio);
 					}
 
-					if (hasTextWidth && hasTextHeight && this._fillImageSettings.textHeight > this._fillImageSettings.textWidth) {
+					if (hasTextWidth && hasTextHeight && heightImage < this._fillImageSettings.textHeight) {
 						heightImage = Math.ceil(this._fillImageSettings.textHeight);
 						widthImage = Math.ceil(this._fillImageSettings.textHeight * imageRatio);
 					}

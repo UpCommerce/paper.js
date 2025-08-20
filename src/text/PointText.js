@@ -192,7 +192,12 @@ var PointText = TextItem.extend(/** @lends PointText# */{
 				var widthImage = textWidth;
 				var heightImage = textWidth / imageRatio;
 
-				if (bounds.height > bounds.width) {
+				// if (bounds.height > bounds.width) {
+				// 	heightImage = bounds.height;
+				// 	widthImage = bounds.height * imageRatio;
+				// }
+
+				if(heightImage < bounds.height){
 					heightImage = bounds.height;
 					widthImage = bounds.height * imageRatio;
 				}
@@ -206,7 +211,7 @@ var PointText = TextItem.extend(/** @lends PointText# */{
 						heightImage = Math.ceil(widthImage / imageRatio);
 					}
 
-					if (hasTextWidth && hasTextHeight && this._fillImageSettings.textHeight > this._fillImageSettings.textWidth) {
+					if (hasTextWidth && hasTextHeight && heightImage < this._fillImageSettings.textHeight) {
 						heightImage = Math.ceil(this._fillImageSettings.textHeight);
 						widthImage = Math.ceil(this._fillImageSettings.textHeight * imageRatio);
 					}
