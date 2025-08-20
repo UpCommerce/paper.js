@@ -161,7 +161,8 @@ var PointText = TextItem.extend(/** @lends PointText# */{
 				var bounds = this._getBounds(null, { actualText: true });
 				const textWidth = bounds.width;
 				var scaling = Math.ceil(Math.max(5, textWidth / 50)); // Generic good quality for the rendering
-				var canvasWidth = Math.round(textWidth * scaling);
+				const extraSpaceWidth = 10 * scaling; // Sembra che la larghezza non sia precisa
+				var canvasWidth = Math.round(textWidth * scaling + extraSpaceWidth);
 				var canvasHeight = Math.round(bounds.height * scaling * 1.5);
 
 				if (canvasWidth <= 0 || canvasHeight <= 0) {
