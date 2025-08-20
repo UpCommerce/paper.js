@@ -9,7 +9,7 @@
  *
  * All rights reserved.
  *
- * Date: Tue Aug 19 13:07:19 2025 +0200
+ * Date: Tue Aug 19 16:30:43 2025 +0200
  *
  ***
  *
@@ -15445,7 +15445,7 @@ new function () {
 			if (item.strokeColor) {
 				const strokePath = SvgElement.create('path', {
 					d: data,
-					fill: 'transparent',
+					fill: 'none',
 					stroke: item.strokeColor.toCSS(true),
 					'stroke-width': item.strokeWidth,
 					'stroke-linecap': item.strokeCap,
@@ -15597,7 +15597,7 @@ new function () {
 			if (item.strokeColor) {
 				const strokePath = SvgElement.create('path', {
 					d: data,
-					fill: 'transparent',
+					fill: 'none',
 					stroke: item.strokeColor.toCSS(true),
 					'stroke-width': item.strokeWidth,
 					'stroke-linecap': item.strokeCap,
