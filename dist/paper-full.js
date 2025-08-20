@@ -9,7 +9,7 @@
  *
  * All rights reserved.
  *
- * Date: Tue Aug 19 16:30:43 2025 +0200
+ * Date: Wed Aug 20 09:23:05 2025 +0200
  *
  ***
  *
@@ -11987,7 +11987,8 @@ var PointText = TextItem.extend({
 				var bounds = this._getBounds(null, { actualText: true });
 				const textWidth = bounds.width;
 				var scaling = Math.ceil(Math.max(5, textWidth / 50));
-				var canvasWidth = Math.round(textWidth * scaling);
+				const extraSpaceWidth = 10 * scaling;
+				var canvasWidth = Math.round(textWidth * scaling + extraSpaceWidth);
 				var canvasHeight = Math.round(bounds.height * scaling * 1.5);
 
 				if (canvasWidth <= 0 || canvasHeight <= 0) {
@@ -14132,7 +14133,7 @@ var CanvasView = View.extend(
 			for (var i = 0, l = lines.length; i < l; i++) {
 
 				var measure = ctx.measureText(lines[i]);
-				var lineWidth = measure.actualBoundingBoxRight - measure.actualBoundingBoxLeft;
+				var lineWidth = measure.actualBoundingBoxRight + measure.actualBoundingBoxLeft;
 				if (lineWidth > width) width = lineWidth;
 			}
 			ctx.font = prevFont;
