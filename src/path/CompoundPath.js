@@ -469,10 +469,15 @@ var CompoundPath = PathItem.extend(/** @lends CompoundPath# */{
             let widthImage = textWidth;
             let heightImage = textWidth / imageRatio;
 
-            if (bounds.height > bounds.width) {
+            // if (bounds.height > bounds.width) {
+            //     heightImage = bounds.height;
+            //     widthImage = bounds.height * imageRatio;
+            // }
+
+            if(heightImage < bounds.height){
                 heightImage = bounds.height;
                 widthImage = bounds.height * imageRatio;
-            }
+			}
 
             if (this._fillImageSettings && widthImage > 0 && heightImage > 0) {
                 if (this._fillImageSettings.syncRatio) {
