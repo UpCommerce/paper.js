@@ -9,7 +9,7 @@
  *
  * All rights reserved.
  *
- * Date: Wed Aug 20 17:03:24 2025 +0200
+ * Date: Thu Aug 21 10:00:04 2025 +0200
  *
  ***
  *
@@ -15491,7 +15491,7 @@ new function () {
 			var widthImage = bounds.width;
 			var heightImage = bounds.width / imageRatio;
 
-			if (bounds.height > bounds.width) {
+			if(heightImage < bounds.height){
 				heightImage = bounds.height;
 				widthImage = bounds.height * imageRatio;
 			}
@@ -15508,7 +15508,7 @@ new function () {
 					heightImage = Math.round(widthImage / imageRatio);
 				}
 
-				if (hasTextWidth && hasTextHeight && fillImageSettings.textHeight > fillImageSettings.textWidth) {
+				if (hasTextWidth && hasTextHeight && heightImage < fillImageSettings.textHeight) {
 					heightImage = Math.round(fillImageSettings.textHeight);
 					widthImage = Math.round(fillImageSettings.textHeight * imageRatio);
 				}
@@ -15822,7 +15822,7 @@ new function () {
 			var widthImage = bounds.width;
 			var heightImage = bounds.width / imageRatio;
 
-			if (bounds.height > bounds.width) {
+			if(heightImage < bounds.height){
 				heightImage = bounds.height;
 				widthImage = bounds.height * imageRatio;
 			}
@@ -15836,7 +15836,7 @@ new function () {
 					heightImage = Math.round(widthImage / imageRatio);
 				}
 
-				if (hasTextWidth && hasTextHeight && fillImageSettings.textHeight > fillImageSettings.textWidth) {
+				if (hasTextWidth && hasTextHeight && heightImage < fillImageSettings.textHeight) {
 					heightImage = Math.round(fillImageSettings.textHeight);
 					widthImage = Math.round(fillImageSettings.textHeight * imageRatio);
 				}

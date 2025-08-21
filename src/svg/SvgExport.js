@@ -239,10 +239,10 @@ new function () {
             var widthImage = bounds.width;
             var heightImage = bounds.width / imageRatio;
 
-            if (bounds.height > bounds.width) {
+            if(heightImage < bounds.height){
                 heightImage = bounds.height;
                 widthImage = bounds.height * imageRatio;
-            }
+			}
 
             heightImage = Math.round(heightImage);
             widthImage = Math.round(widthImage);
@@ -256,10 +256,10 @@ new function () {
                     heightImage = Math.round(widthImage / imageRatio);
                 }
 
-                if (hasTextWidth && hasTextHeight && fillImageSettings.textHeight > fillImageSettings.textWidth) {
+                if (hasTextWidth && hasTextHeight && heightImage < fillImageSettings.textHeight) {
                     heightImage = Math.round(fillImageSettings.textHeight);
                     widthImage = Math.round(fillImageSettings.textHeight * imageRatio);
-                }
+				}
 
                 if (fillImageSettings.hasOwnProperty("offsetLeft")) {
                     leftImage = -fillImageSettings.offsetLeft;
@@ -590,10 +590,10 @@ new function () {
             var widthImage = bounds.width;
             var heightImage = bounds.width / imageRatio;
 
-            if (bounds.height > bounds.width) {
+            if(heightImage < bounds.height){
                 heightImage = bounds.height;
                 widthImage = bounds.height * imageRatio;
-            }
+			}
 
             if (fillImageSettings && widthImage > 0 && heightImage > 0) {
                 var hasTextWidth = fillImageSettings.hasOwnProperty("textWidth");
@@ -604,7 +604,7 @@ new function () {
                     heightImage = Math.round(widthImage / imageRatio);
                 }
 
-                if (hasTextWidth && hasTextHeight && fillImageSettings.textHeight > fillImageSettings.textWidth) {
+                if (hasTextWidth && hasTextHeight && heightImage < fillImageSettings.textHeight) {
                     heightImage = Math.round(fillImageSettings.textHeight);
                     widthImage = Math.round(fillImageSettings.textHeight * imageRatio);
                 }
