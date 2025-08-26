@@ -9,7 +9,7 @@
  *
  * All rights reserved.
  *
- * Date: Thu Aug 21 10:00:04 2025 +0200
+ * Date: Thu Aug 21 16:12:20 2025 +0200
  *
  ***
  *
@@ -12089,7 +12089,7 @@ var PointText = TextItem.extend({
 						boundingBoxLeft = halfWidth;
 						newCtx.translate(halfWidth, 0);
 					}
-					newCtx.drawImage(this._fillImage, 0, 0, widthImage, heightImage);
+					newCtx.drawImage(this._fillImage, -metrics.actualBoundingBoxLeft, 0, widthImage, heightImage);
 
 					ctx.translate(-boundingBoxLeft, -bounds.height);
 					ctx.scale(1 / scaling, 1 / scaling);
