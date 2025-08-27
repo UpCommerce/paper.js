@@ -4751,6 +4751,7 @@ var Item = Base.extend(Emitter, {
 			if (this._class && this._class !== 'Raster') {
 				var actualBounds = this.getActualTextBounds(viewMatrix);
 				bounds = bounds.unite(actualBounds);
+				bounds = bounds.expand(bounds.width * 1.51, bounds.height * 1.51);
 			}
 
 			prevOffset = param.offset;
