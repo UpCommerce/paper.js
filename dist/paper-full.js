@@ -9,7 +9,7 @@
  *
  * All rights reserved.
  *
- * Date: Wed Aug 27 17:00:08 2025 +0200
+ * Date: Wed Aug 27 18:12:14 2025 +0200
  *
  ***
  *
@@ -4751,6 +4751,7 @@ var Item = Base.extend(Emitter, {
 			if (this._class && this._class !== 'Raster') {
 				var actualBounds = this.getActualTextBounds(viewMatrix);
 				bounds = bounds.unite(actualBounds);
+				bounds = bounds.expand(bounds.width * 1.51, bounds.height * 1.51);
 			}
 
 			prevOffset = param.offset;
