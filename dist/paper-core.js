@@ -9,7 +9,7 @@
  *
  * All rights reserved.
  *
- * Date: Wed Aug 27 17:14:04 2025 +0200
+ * Date: Fri Aug 29 11:33:12 2025 +0200
  *
  ***
  *
@@ -12085,12 +12085,14 @@ var PointText = TextItem.extend({
 
 				if (widthImage > 0 && heightImage > 0 && bounds.height > 0) {
 					let boundingBoxLeft = 0;
+					let imageLeftOffset = metrics.actualBoundingBoxLeft;
 					if (ctx.textAlign == "center") {
 						const halfWidth = metrics.width / 2;
 						boundingBoxLeft = halfWidth;
 						newCtx.translate(halfWidth, 0);
+						imageLeftOffset = 0;
 					}
-					newCtx.drawImage(this._fillImage, -metrics.actualBoundingBoxLeft, 0, widthImage, heightImage);
+					newCtx.drawImage(this._fillImage, -imageLeftOffset, 0, widthImage, heightImage);
 
 					ctx.translate(-boundingBoxLeft, -bounds.height);
 					ctx.scale(1 / scaling, 1 / scaling);
