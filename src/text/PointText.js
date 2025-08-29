@@ -270,12 +270,14 @@ var PointText = TextItem.extend(/** @lends PointText# */{
 
 				if (widthImage > 0 && heightImage > 0 && bounds.height > 0) {
 					let boundingBoxLeft = 0;
+					let imageLeftOffset = metrics.actualBoundingBoxLeft;
 					if (ctx.textAlign == "center") {
 						const halfWidth = metrics.width / 2;
 						boundingBoxLeft = halfWidth;
 						newCtx.translate(halfWidth, 0);
+						imageLeftOffset = 0;
 					}
-					newCtx.drawImage(this._fillImage, -metrics.actualBoundingBoxLeft, 0, widthImage, heightImage);
+					newCtx.drawImage(this._fillImage, -imageLeftOffset, 0, widthImage, heightImage);
 					// newCtx is bigger then the main, so to avoid a double scaling
 
 					ctx.translate(-boundingBoxLeft, -bounds.height);
